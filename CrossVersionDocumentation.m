@@ -2,7 +2,7 @@
 
 (******************************************************************************
 
-	This file is part of WWBCommon
+    This file is part of WWBCommon
     Copyright (C) 2014 Jakub Kuczmarski <Jakub.Kuczmarski@gmail.com>
 
     WWBCommon is free software: you can redistribute it and/or modify
