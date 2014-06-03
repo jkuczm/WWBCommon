@@ -1,0 +1,363 @@
+<?xml version="1.0"?>
+<!--
+******************************************************************************
+
+	This file is part of WWBCommon
+    Copyright (C) 2014 Jakub Kuczmarski <Jakub.Kuczmarski@gmail.com>
+
+    WWBCommon is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    WWBCommon is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    
+******************************************************************************
+    
+    Attribution
+    
+    Parts of code of this file are modifications of files from xTras package
+    <https://github.com/xAct-contrib/xTras>
+    Copyright (C) 2012 - 2014 Teake Nutma <http://www.aei.mpg.de/~nutma/>
+    used under GNU General Public License version 3.
+
+    Parts of code of this file are a derivative of code written by:
+    Teake Nutma <http://mathematica.stackexchange.com/users/5485> and
+    Simon Rochester <http://mathematica.stackexchange.com/users/8253>
+    in "Creating cross-version compatible documentation with Workbench"
+    thread on Mathematica Stack Exchange
+    <http://mathematica.stackexchange.com/questions/28316>
+    used under Creative Commons Attribution-ShareAlike 3.0 Unported License.
+    To view a copy of this license, visit
+    <http://creativecommons.org/licenses/by-sa/3.0/>.
+
+
+******************************************************************************   
+-->
+<project name="init" basedir=".">
+	<description>
+		This file loads build and project specific properties. Then sets
+		default values of build, project and system properties, that
+		where not set. It also defines some common targets for building
+		documentation and deploying application.
+	</description>
+	
+	<!-- Load properties from calling project  -->
+	<property file="${basedir}/buildScripts/build.properties"/>
+	<property file="${basedir}/buildScripts/project.properties"/>
+	
+	
+	<property name="WWBCommonPath" value="."/>
+	
+	<!-- Load properties from WWBCommon project  -->
+	<property file="${WWBCommonPath}/project.properties"/>
+	<property file="${WWBCommonPath}/system.properties"/>
+	
+
+	<!--
+		Set Mathematica.DocumentationBuild.createHTML property if HTML
+		documentation should be built
+	-->
+	<property name="${Mathematica.DocumentationBuild.createHTML.setting}"
+			  value="true"/>
+	
+	
+	<path id="java.lib">
+		<fileset dir="${appPath}/DocumentationBuild/Java">
+			<include name="**/*.jar"/>
+		</fileset>
+	</path>
+
+	<!-- Load ant-contrib.jar for addition ant tasks (for, foreach, limit, stopwatch, ...) -->
+	<taskdef resource="net/sf/antcontrib/antlib.xml">
+		<classpath refid="java.lib"/>
+	</taskdef>
+	
+	
+	<target name="initMathematicaTask"
+			unless="JLinkLoaded"
+			description="define mathematica task">
+		
+	  	<path id="jlink.lib">
+			<fileset dir="${jlinkpath}">
+		  		<include name="**/JLink.jar"/>
+		  		<include name="**/SystemFiles/*"/>
+			</fileset>
+	  	</path>
+		
+		<taskdef name="mathematica"
+				 classname="com.wolfram.jlink.util.MathematicaTask">
+			
+			<classpath refid="jlink.lib" />
+			
+		</taskdef>
+		
+		<property name="JLinkLoaded" value="true"/>
+		<echo message="JLink loaded"/>
+		
+	</target>
+	
+	
+	
+	
+	<!-- Cleaning targets -->
+	
+	
+	<target name="clean" description="delete whole build">
+		<delete dir="${dist}"/>
+	</target>
+	
+	
+	<target name="cleanDocNB"
+			description="delete built documentation notebooks and built PacletInfo.m">
+
+		<delete dir="${outputDirNB}"/>
+		<delete file="${appReleaseDir}/PacletInfo.m"/>
+		
+	</target>
+	
+	
+	<target name="cleanDocHTML"
+			description="delete built HTML version of documentation">
+		
+		<delete dir="${outputDirWeb}"/>
+		
+	</target>
+	
+	
+	<target name="cleanDocbuild"
+			description="delete all built documentation files for current build">
+		
+		<antcall target="cleanDocNB"/>
+		<if>
+			<isset property="Mathematica.DocumentationBuild.createHTML"/>
+			<then>
+				<antcall target="cleanDocHTML"/>
+			</then>
+		</if>
+		
+	</target>
+	
+	
+	<target name="cleanAppRelease"
+			description="delete application released files, except documentation and PacletInfo.m, from build directory">
+		
+		<delete dir="${appReleaseDir}"
+				excludes="Documentation/** PacletInfo.m"
+				includeemptydirs="true"/>
+		
+	</target>
+	
+	
+	<target name="cleanArchive" description="delete existing archive file">
+		<delete file="${archiveFile}"/>
+	</target>
+	
+	
+	
+	
+	<!-- "Standard" docbuild targets -->
+	
+	
+	<target name="createNB" description="create documentation notebooks">
+		<ant antfile="${appPath}/DocumentationBuild/SystemFiles/ant/Build/notebook.xml"
+			 target="main">
+			
+			<property name="outputDir" value="${outputDirNB}" />
+			<property name="language" value="English" />
+			
+		</ant>
+	</target>
+	
+	
+	<target name="createHTML"
+			if="Mathematica.DocumentationBuild.createHTML"
+			description="create HTML documentation">
+		
+		<ant antfile="${appPath}/DocumentationBuild/SystemFiles/ant/Build/html.xml"
+			 target="main">
+			
+			<property name="local" value="True"/>
+			<property name="completeHTMLQ" value="True"/>
+			<property name="includeLinkTrails" value="False"/>
+			<property name="outputDir" value="${outputDirWeb}" />
+			<property name="language" value="English" />
+		</ant>
+		
+	</target>
+	
+	
+	<target name="setupPaclet"
+			if="buildNBDocs"
+			description="copy paclet and all files except doc src notebooks">
+		
+		<copy file="${basedir}/PacletInfo.m"
+			  todir="${appReleaseDir}"
+			  overwrite="true"/>
+		
+		<copy todir="${outputDirNB}" overwrite="true">
+			
+			<fileset dir="${basedir}/${docInputDir}">
+				<exclude name="*/Guides/**"/>
+				<exclude name="*/ReferencePages/**"/>
+				<exclude name="*/Tutorials/**"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	
+	<target name="docbuild"
+			description="create documentation notebooks, HTML and copy paclet">
+		
+		<echo message="DocumentationBuild: ${appPath}"/>
+		<echo message="Mathematica Install Dir: ${mathematicaInstallDir}"/>
+		<echo message="MathKernel: ${mathExe}"/>
+		<echo message="Input: ${inputDir}"/>
+		<echo message="Output NB: ${outputDirNB}"/>
+		<echo message="Output Web: ${outputDirWeb}"/>
+
+		<antcall target="createNB"/>
+		<antcall target="createHTML"/>
+		<antcall target="setupPaclet"/>
+		
+	</target>
+	
+	
+	
+	
+	<!-- "Fixed" docbuild targets -->
+	
+	
+	<target name="crossVersionReplacements"
+			depends="initMathematicaTask"
+			description="adapt doc notebooks to MMA versions 6.0+">
+		
+		<mathematica exe="${mathExe}">
+			<![CDATA[
+				
+				Get[FileNameJoin[{AntProperty["WWBCommonPath"], "CrossVersionDocumentation.m"}]];
+				
+				NotebookCrossVersionFix[AntProperty["outputDirNB"], "PrintFunction" -> AntLog];
+				
+			]]>
+		</mathematica>
+		
+		
+		<echo message="Changing FrontEndVersion to 6.0 in built documentation notebooks"/>
+		<replaceregexp match='FrontEndVersion(\s*)->(\s*)"([^"]*)"'
+					   replace='FrontEndVersion -> "6.0"'
+					   flags="gs">
+			
+			<fileset dir="${outputDirNB}" includes="**/*.nb"/>
+			
+		</replaceregexp>
+		
+	</target>
+	
+	
+	<target name="fixHTMLUrls"
+			if="Mathematica.DocumentationBuild.createHTML"
+			description="replace absolute URLs with relative URLs in HTML">
+		
+		<echo message="Replacing absolute URLs with relative URLs in HTML files"/>
+		
+		<replace dir="${outputDirWeb}"
+				 includes="**/*.html"
+				 token='a href="http://reference.wolfram.com/mathematica/${app.name}/'
+				 value='a href="../'
+				 summary="true"/>
+		
+		<replace dir="${outputDirWeb}"
+				 includes="**/*.html"
+			 	 token='a href="/mathematica/${app.name}/'
+				 value='a href="../'
+				 summary="true"/>
+		
+	</target>
+	
+	
+	<target name="docbuildFixed"
+			depends="initMathematicaTask"
+			description="build full documentation and apply fixes">
+		
+		<antcall target="docbuild"/>
+		<antcall target="crossVersionReplacements"/>
+		<antcall target="fixHTMLUrls"/>
+		
+	</target>
+	
+	
+	
+	
+	<!-- Deployment targets -->
+	
+	
+	<target name="conditionalDocbuild"
+			description="run projects docbuild.xml if built docs are out of date">
+		
+		<!--
+			Find youngest of documentation source files and source
+			PacletInfo.m
+		-->
+		<timestampselector property="youngestDocSrc" age="youngest">
+			<path>
+				<fileset dir="${basedir}/${docInputDir}"/>
+				<pathelement location="${basedir}/PacletInfo.m"/>
+			</path>
+		</timestampselector>
+		<echo message="Youngest Documentation Source: ${youngestDocSrc}"/>
+
+		<!--
+			Find eldest of built documentation notebooks and built
+			PacletInfo.m
+		-->
+		<timestampselector property="eldestDocBlt" age="eldest">
+			<path>
+				<fileset dir="${outputDirNB}"/>
+				<pathelement location="${appReleaseDir}/PacletInfo.m"/>
+			</path>
+		</timestampselector>
+		<echo message="Eldest docbuild generated file: ${eldestDocBlt}"/>
+		
+		<if>
+			<uptodate srcfile="${youngestDocSrc}" targetfile="${eldestDocBlt}"/>
+			<then>
+				<echo message="Built documentation is up to date, skipping docbuild."/>
+			</then>
+			<else>
+				<echo message="Built documentation is stale, running docbuild."/>
+				<ant antfile="${scriptsDir}/docbuild.xml" target="main"/>
+			</else>
+		</if>
+	
+	</target>
+	
+	
+	<target name="appbuild"
+			description="copy application source files, except documentation and tests, to build directory">
+		
+		<copy todir="${appReleaseDir}" overwrite="true" >
+			<fileset dir="${basedir}/${app.name}">
+				<exclude name="Tests/**"/>
+				<exclude name="Documentation/**"/>
+			</fileset>
+			<fileset dir="${basedir}" includes="${releaseInclude}"/>
+		</copy>
+	</target>
+	
+	
+	<target name="createArchive"
+		description="create archive file containing build application release directory">
+		
+		<zip destfile="${archiveFile}" basedir="${dist}" includes="${pacletContainer}/**"/>
+		
+	</target>
+	
+</project>
+

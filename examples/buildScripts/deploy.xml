@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<project name="DeployApplication" default="main" basedir="..">
+	<description>
+		This file builds documentation notebooks if necessary
+		and deploys application to an archive file.
+	</description>
+    
+	
+    <import file="${WWBCommonPath}/init.xml"/>
+	
+	
+	<target name="main">
+		<antcall target="cleanArchive"/>
+		<antcall target="cleanAppRelease"/>
+		<antcall target="conditionalDocbuild"/>
+		<antcall target="appbuild"/>
+		<antcall target="createArchive"/>
+	</target>
+	
+</project>
