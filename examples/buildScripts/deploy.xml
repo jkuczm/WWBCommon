@@ -4,9 +4,9 @@
 		This file builds documentation notebooks if necessary
 		and deploys application to an archive file.
 	</description>
-    
 	
-    <import file="${WWBCommonPath}/init.xml"/>
+	
+	<import file="${WWBCommonPath}/init.xml"/>
 	
 	
 	<target name="main">
