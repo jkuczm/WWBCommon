@@ -340,15 +340,24 @@
 	
 	
 	<target name="appbuild"
-			description="copy application source files, except documentation and tests, to build directory">
+			description="copy application source files, except documentation to build directory">
 		
-		<copy todir="${appReleaseDir}" overwrite="true" >
+		<copy todir="${appReleaseDir}" overwrite="true">
 			<fileset dir="${basedir}/${app.name}">
 				<exclude name="Tests/**"/>
 				<exclude name="Documentation/**"/>
 			</fileset>
 			<fileset dir="${basedir}" includes="${releaseInclude}"/>
 		</copy>
+
+		<if>
+			<equals arg1="${releaseTests}" arg2="true" />
+			<then>
+				<copy todir="${appReleaseDir}/Tests" overwrite="true">
+					<fileset dir="${basedir}/${app.name}/Tests"/>
+				</copy>
+			</then>
+		</if>
 	</target>
 	
 	
