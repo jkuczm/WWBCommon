@@ -374,5 +374,40 @@
 		
 	</target>
 	
+	
+	
+	
+	<!-- Other targets -->
+	
+	
+	<target name="sanitizeSrcNotebooks"
+			depends="initMathematicaTask"
+			description='preprocess source documentation notebooks making them version control friendly'>
+		
+		<mathematica exe="${mathExe}">
+			<![CDATA[
+				PrependTo[$Path, AntProperty["WWBCommonPath"]];
+				Needs["NotebookUtilities`"];
+				
+				ProcessNotebookFiles[
+					AntProperty["inputDir"],
+					"ExpressionProcessor" ->
+						(DeleteCases[#, CellChangeTimes -> _, Infinity]&),
+					"ObjectProcessor" -> ((
+						SetOptions[#, TrackCellChangeTimes -> False];
+						NotebookNoCache[#];
+					)&),
+					"FrontEndSessionOptions" -> {
+						CellLabelAutoDelete -> False,
+						CellGrouping -> Manual
+					},
+					"PrintFunction" -> AntLog
+				];
+				
+			]]>
+		</mathematica>
+		
+	</target>
+	
 </project>
 

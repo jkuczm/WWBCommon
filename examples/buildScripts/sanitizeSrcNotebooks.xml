@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<project name="BuildDocumentation" default="sanitizeSrcNotebooks" basedir="..">
+	<description>
+		This file processes documentation source notebooks making them more
+		version control friendly. It disables notebook caching and history
+		tracking, also removes existing cell change times.
+	</description>
+	
+	
+	<import file="${WWBCommonPath}/init.xml"/>
+	
+</project>
