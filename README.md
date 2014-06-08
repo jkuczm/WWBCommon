@@ -6,6 +6,7 @@ Set of packages and scripts common to my projects developed using Wolfram
 Workbench.
 
 
+* [Features](#features)
 * [Installation](#installation)
     * [Project import](#project-import)
     * [Ant runtime configuration](#ant-runtime-configuration)
@@ -15,6 +16,20 @@ Workbench.
 * [Bugs and requests](#bugs-and-requests)
 * [Contributing](#contributing)
 * [License](#license)
+
+
+
+## Features
+
+* Tools "fixing" documentation:
+    * making it cross version compatible,
+    * fixing links in HTML version.
+* Tools making source notebooks version control friendly:
+    * disabling notebook cache,
+    * disabling notebook cells history tracking,
+    * removing existing cell change times.
+* Scripts simplifying customization of documentation building and package
+  deployment.
 
 
 
