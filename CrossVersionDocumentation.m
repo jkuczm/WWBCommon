@@ -34,6 +34,7 @@
 
 ******************************************************************************)
 
+
 BeginPackage["CrossVersionDocumentation`"]
 
 
@@ -55,16 +56,7 @@ replacements."
 NotebookCrossVersionFix::usage =
 "\
 NotebookCrossVersionFix[nb] \
-with nb being Notebook expression, returns nb with cross version fixes.\
-
-NotebookCrossVersionFix[\"file\"] \
-saves notebook, from given file, with cross version fixes, returns file path.\
-
-NotebookCrossVersionFix[{\"file1\", \"file2\", \"file3\", ...}] \
-saves notebooks, from given files, with cross version fixes.\
-
-NotebookCrossVersionFix[\"directory\"] \
-saves all notebooks, found in given directory, with cross version fixes."
+with nb being Notebook expression, returns nb with cross version fixes."
 
 
 (*
@@ -268,13 +260,6 @@ $HeadingStyles = {
 (*NotebookCrossVersionFix*)
 
 
-NotebookCrossVersionFix::wrongPath =
-"Given string: `1` does not represent valid path to a directory nor to a file."
-
-
-Options[NotebookCrossVersionFix] = {"Verbose" -> 2, "PrintFunction" -> Print}
-
-
 NotebookCrossVersionFix[nb_Notebook, OptionsPattern[]] :=
 	Module[
 		{expr = nb}
@@ -424,90 +409,6 @@ NotebookCrossVersionFix[nb_Notebook, OptionsPattern[]] :=
 
 		expr
 	]
-
-NotebookCrossVersionFix[
-	file_String /; FileType[file] === File,
-	opts:OptionsPattern[]
-] :=
-	Module[
-		{nb}
-		,
-		If[OptionValue["Verbose"] >= 2,
-			OptionValue["PrintFunction"][
-				"\tRunning cross-version replacements on " <> file <> " file"
-			];
-		];
-		
-		(* Importing nb files containing Manipulate objects can throw a bunch of benign newline interpretation warnings *)
-		Quiet[
-			nb = Get[file],
-			Syntax::newl
-		];
-		
-		nb = NotebookCrossVersionFix[nb, opts];
-
-		(* Save notebook using Front End *)
-		Developer`UseFrontEnd@With[
-			{nbObj = NotebookPut[nb]}
-			,
-			SetOptions[
-				nbObj
-				,
-				(* Add "FileOutlineCache" -> False option *)
-				PrivateNotebookOptions -> 
-					Prepend[
-						FilterRules[
-							Flatten @ Cases[
-								Options[nbObj],
-								HoldPattern[PrivateNotebookOptions -> value_] :> value,
-								{1},
-								1
-							]
-							,
-							Except["FileOutlineCache"]
-						]
-						,
-						"FileOutlineCache" -> False
-					]
-			];
-			NotebookSave[nbObj, file];
-			NotebookClose[nbObj];
-		];
-		
-		file
-	]
-
-NotebookCrossVersionFix[fileList:{___String}, opts:OptionsPattern[]] := (
-	If[OptionValue["Verbose"] >= 1,
-		OptionValue["PrintFunction"][
-			"Running cross-version replacements on " <>
-			ToString@Length@fileList <>
-			" files"
-		];
-	];
-	
-	Do[(* Loop over files *)
-		NotebookCrossVersionFix[file, opts],
-		{file, fileList}
-	]
-)
-
-NotebookCrossVersionFix[
-	dir_String /; FileType[dir] === Directory,
-	opts:OptionsPattern[]
-] := (
-	If[OptionValue["Verbose"] >= 1,
-		OptionValue["PrintFunction"][
-			"Running cross-version replacements in " <> dir
-		];
-	];
-	NotebookCrossVersionFix[FileNames["*.nb", dir, Infinity], opts]
-)
-
-NotebookCrossVersionFix[unknownString_String, OptionsPattern[]] := (
-	Message[NotebookCrossVersionFix::wrongPath, unknownString];
-	$Failed
-)
 
 
 End[]

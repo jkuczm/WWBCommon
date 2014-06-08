@@ -240,10 +240,16 @@
 		
 		<mathematica exe="${mathExe}">
 			<![CDATA[
+				PrependTo[$Path, AntProperty["WWBCommonPath"]];
+				Needs["NotebookUtilities`"];
+				Needs["CrossVersionDocumentation`"];
 				
-				Get[FileNameJoin[{AntProperty["WWBCommonPath"], "CrossVersionDocumentation.m"}]];
-				
-				NotebookCrossVersionFix[AntProperty["outputDirNB"], "PrintFunction" -> AntLog];
+				ProcessNotebookFiles[
+					AntProperty["outputDirNB"],
+					"ExpressionProcessor" -> NotebookCrossVersionFix,
+					"ObjectProcessor" -> NotebookNoCache,
+					"PrintFunction" -> AntLog
+				];
 				
 			]]>
 		</mathematica>
