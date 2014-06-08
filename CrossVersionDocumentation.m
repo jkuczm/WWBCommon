@@ -418,11 +418,10 @@ End[]
 (*Public symbols protection*)
 
 
-(*
-	Protect all symbols in this context
-	(all public symbols provided by this package)
-*)
-Protect["`*"]
+(* Protect all symbols in this context except variables. *)
+Protect @ Evaluate @ Names[
+	"`"~~ Except["$"] ~~ Repeated[WordCharacter, {0, Infinity}]
+]
 
 
 EndPackage[]
