@@ -197,7 +197,7 @@
 			if="buildNBDocs"
 			description="copy paclet and all files except doc src notebooks">
 		
-		<copy file="${basedir}/PacletInfo.m"
+		<copy file="${basedir}/${pacletSource}"
 			  todir="${appReleaseDir}"
 			  overwrite="true"/>
 		
