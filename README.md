@@ -89,6 +89,11 @@ steps.
 2. In copied `buildScripts/project.properties` file change `MySuperDuperMmaApp`
    to name of your application.
 
+3. Change:
+   `Project` > `Properties` > `Mathematica` > `Paclet Settings` >
+   `Documentation Build File`
+   setting to `buildScripts/docbuild.xml`.
+
 
 ## Bugs and requests
 
