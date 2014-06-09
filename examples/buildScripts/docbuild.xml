@@ -12,7 +12,7 @@
 	
 
 	<target name="main">
-		<antcall target="clean"/>
+		<antcall target="cleanDocbuild"/>
 		<antcall target="docbuildFixed"/>
 	</target>
 	
