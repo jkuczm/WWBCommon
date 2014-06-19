@@ -367,10 +367,17 @@
 	</target>
 	
 	
+	<fileset id="archiveFileSet"
+		dir="${dist}"
+		includes="${pacletContainer}/**"/>
+	
+	
 	<target name="createArchive"
 		description="create archive file containing build application release directory">
 		
-		<zip destfile="${archiveFile}" basedir="${dist}" includes="${pacletContainer}/**"/>
+		<zip destfile="${archiveFile}">
+			<resources refid="archiveFileSet"/>
+		</zip>
 		
 	</target>
 	
