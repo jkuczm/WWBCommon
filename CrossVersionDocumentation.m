@@ -285,6 +285,37 @@ NotebookCrossVersionFix[nb_Notebook, OptionsPattern[]] :=
 					o
 				]
 			,
+			(*Symbol More About section-- rename to Related Guides*)
+			Cell[con_, sty : "MoreAboutSection", o___] :>
+				SectionCell[
+					sty,
+					{
+						FrameLabelCell[con, sty]
+						,
+						con /. (ButtonBox[_String, bbo___] :>
+							ButtonBox[
+								FrameLabelCell[
+									TextData[{SpacerCell, "Related Guides"}],
+									sty
+								],
+								bbo
+							]
+						)
+					},
+					o
+				]
+			,
+			(*Tutorial More About section-- rename to Related Guides*)
+			Cell[con_, sty : "TutorialMoreAboutSection", o___] :>
+				SectionCell[
+					sty,
+					{
+						FrameLabelCell[con, sty],
+						FrameLabelSpacerCell["Related Guides", sty]
+					},
+					o
+				]
+			,
 			(*Guide Tutorials section-- need to mimic standard version 9 section style*)
 			Cell[con_, sty : "GuideTutorialsSection", o___] :>
 				SectionCell[
