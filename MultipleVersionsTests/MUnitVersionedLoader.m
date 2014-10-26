@@ -87,8 +87,8 @@ NeedsVersionedMUnit::incorrect$WorkbenchMUnitPath =
 "Cannot open \"MUnit`.`\" and no correct $WorkbenchMUnitPath provided.\
 
 Either manually add directory containing MUnit package to $Path before \
-loading MultipleVersionsTests`.`MUnitVersionedLoader`.` package or set
-$WorkbenchMUnitPath to string containing path to workbench munit versioned
+loading MultipleVersionsTests`.`MUnitVersionedLoader`.` package or set \
+$WorkbenchMUnitPath to string containing path to workbench munit versioned \
 source directory similar to:\
 
 MultipleVersionsTests`.`MUnitVersionedLoader`.`$WorkbenchMUnitPath = \

@@ -35,7 +35,7 @@ BeginPackage["MultipleVersionsTests`Serialization`", {"MUnit`"}]
 TestResultSerialized::usage =
 "\
 TestResultSerialized[\"selsctor1\" -> val1, \"selector2\" -> val2, ...] \
-represents serialized version of test result. It's stateless, independent of
+represents serialized version of test result. It's stateless, independent of \
 MUnit version and can be sent through WSTP link."
 
 
@@ -110,7 +110,7 @@ test result to option names of test result from used version of MUnit."
 extractTest::usage =
 "\
 extractTest[tr] \
-returns test expression extracted from given test result object tr if used
+returns test expression extracted from given test result object tr if used \
 version of MUnit supports this feature, otherwise returns None."
 
 
@@ -251,7 +251,10 @@ SerializeTestResult[tr_?TestResultQ] :=
 				Reap[
 					Scan[
 						If[ValueQ[#[tr]],
-							Sow[SymbolName[#] -> #[tr], multipleVersionsTestsTag]
+							Sow[
+								SymbolName[#] -> #[tr],
+								multipleVersionsTestsTag
+							]
 						]&
 						,
 						$testResultSelectors

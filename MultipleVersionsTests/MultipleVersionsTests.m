@@ -49,8 +49,8 @@ returns an MUnit logger that writes every logged message to given link."
 TestLoggerPacket::usage =
 "\
 TestLoggerPacket[logFunction, arg1, arg2, ...] \
-is a packet sent by WSTPLinkLogger to a WSTP link associated with
-wstpLoggerInstance when logFunction[wstpLoggerInstance, arg1, arg2, ...] is
+is a packet sent by WSTPLinkLogger to a WSTP link associated with \
+wstpLoggerInstance when logFunction[wstpLoggerInstance, arg1, arg2, ...] is \
 evaluated. logFunction can be any of MUnit`Log... functions."
 
 
@@ -71,8 +71,8 @@ Begin["`Private`"]
 logVersionRunTests::usage =
 "\
 logVersionRunTests[tests, options] \
-logs used mathematica version to Loggers from options and runs given tests with
-given options."
+logs used mathematica version to Loggers from options and runs given tests \
+with given options."
 
 
 (* ::Section:: *)
