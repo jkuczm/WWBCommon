@@ -23,8 +23,9 @@
     Attribution
 
     Code of this file is a derivative of code written by:
-    Simon Rochester <http://mathematica.stackexchange.com/users/8253> and
-    Teake Nutma <http://mathematica.stackexchange.com/users/5485>
+    Simon Rochester <http://mathematica.stackexchange.com/users/8253>,
+    Teake Nutma <http://mathematica.stackexchange.com/users/5485> and
+    Sebastian Schenk <http://mathematica.stackexchange.com/users/12333>
     in "Creating cross-version compatible documentation with Workbench"
     thread on Mathematica Stack Exchange
     <http://mathematica.stackexchange.com/questions/28316>
@@ -281,6 +282,37 @@ NotebookCrossVersionFix[nb_Notebook, OptionsPattern[]] :=
 										TextData[{SpacerCell, "Details and Options"}], 
 										sty
 									]
+					},
+					o
+				]
+			,
+			(*Symbol More About section-- rename to Related Guides*)
+			Cell[con_, sty : "MoreAboutSection", o___] :>
+				SectionCell[
+					sty,
+					{
+						FrameLabelCell[con, sty]
+						,
+						con /. (ButtonBox[_String, bbo___] :>
+							ButtonBox[
+								FrameLabelCell[
+									TextData[{SpacerCell, "Related Guides"}],
+									sty
+								],
+								bbo
+							]
+						)
+					},
+					o
+				]
+			,
+			(*Tutorial More About section-- rename to Related Guides*)
+			Cell[con_, sty : "TutorialMoreAboutSection", o___] :>
+				SectionCell[
+					sty,
+					{
+						FrameLabelCell[con, sty],
+						FrameLabelSpacerCell["Related Guides", sty]
 					},
 					o
 				]

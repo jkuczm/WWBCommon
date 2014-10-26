@@ -125,8 +125,9 @@ Parts of code of this project are modifications of files from
 [GNU General Public License version 3](https://github.com/xAct-contrib/xTras/blob/master/LICENSE).
 
 Parts of code of this project are a derivative of code written by
-[Teake Nutma](http://mathematica.stackexchange.com/users/5485) and
-[Simon Rochester](http://mathematica.stackexchange.com/users/8253)
+[Teake Nutma](http://mathematica.stackexchange.com/users/5485),
+[Simon Rochester](http://mathematica.stackexchange.com/users/8253) and
+[Sebastian Schenk](http://mathematica.stackexchange.com/users/12333)
 in
 [Creating cross-version compatible documentation with Workbench](http://mathematica.stackexchange.com/questions/28316)
 thread on Mathematica Stack Exchange used under
