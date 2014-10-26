@@ -1,6 +1,6 @@
 # Wolfram Workbench Common
-[![release](http://img.shields.io/github/release/jkuczm/WWBCommon.svg)](https://github.com/jkuczm/WWBCommon/releases/latest)
-[![license GPLv3](http://img.shields.io/:license-GPLv3-brightgreen.svg)](https://github.com/jkuczm/WWBCommon/blob/master/LICENSE)
+[![release v0.2.0](http://img.shields.io/badge/release-v0.2.0-orange.svg)](https://github.com/jkuczm/WWBCommon/releases/latest)
+[![license GPLv3](http://jkuczm.github.io/media/images/license-GPLv3-brightgreen.svg)](https://github.com/jkuczm/WWBCommon/blob/master/LICENSE)
 
 
 Set of packages and scripts common to my projects developed using Wolfram
