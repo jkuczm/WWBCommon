@@ -45,7 +45,7 @@ Workbench.
 1. Download
    [repository archive](https://github.com/jkuczm/WWBCommon/archive/master.zip).
 
-2. In Eclipse choose: `File` > `Inport...`.
+2. In Eclipse choose: `File` > `Import...`.
 
 3. Select: `General` > `Existing Projects into Workspace`, click `Next >`.
 
