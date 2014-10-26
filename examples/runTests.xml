@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<project name="BuildDocumentation" default="runTests" basedir=".">
+	<description>
+		This file runs project test suite in three versions of Mathematica.
+	</description>
+	
+	<property name="WorkbenchMUnitPath"
+			  value="/path/to/eclipse/configuration/org.eclipse.osgi/bundles/x/y/.cp/MathematicaSourceVersioned"/>
+	
+	<property name="mathExecutables"
+			  value="/usr/local/Wolfram/Mathematica/8.0/Executables/MathKernel,/usr/local/Wolfram/Mathematica/9.0/Executables/MathKernel,/usr/local/Wolfram/Mathematica/10.0/Executables/MathKernel"/>
+	
+	<property name="app.name" value="MySuperDuperMmaApp"/>
+	
+	<property name="testFiles" value="${app.name}/Tests/suite.mt"/>
+	
+	<import file="${WWBCommonPath}/init.xml"/>
+	
+</project>
