@@ -415,6 +415,95 @@
 		</mathematica>
 		
 	</target>
+
+	
+	<target name="runTests"
+			depends="initMathematicaTask"
+			description='runs tests in all mathematica versions'>
+		<mathematica exe="${mathExe}">
+		  	<![CDATA[
+				$Path =
+					DeleteDuplicates @ Join[
+						{AntProperty["basedir"], AntProperty["WWBCommonPath"]},
+						$Path
+					];
+				MultipleVersionsTests`MUnitVersionedLoader`$WorkbenchMUnitPath =
+					AntProperty["WorkbenchMUnitPath"];
+				Needs["MultipleVersionsTests`"];
+				
+				Module[
+					{
+						testFiles, testFilesNo,
+						mathExecutables, mathExecutablesNo,
+						testLoggers,
+						antFailOnTestFail,
+						result, fullResult
+					}
+					,
+					
+					Check[
+						testFiles =
+							Flatten @ ImportString[AntProperty["testFiles"], "CSV"];
+						testFilesNo = Length[testFiles];
+						mathExecutables =
+							Flatten @ ImportString[AntProperty["mathExecutables"], "CSV"];
+						mathExecutablesNo = Length[mathExecutables];
+						testLoggers =
+							Symbol /@ Flatten @ ImportString[AntProperty["testLoggers"], "CSV"];
+						antFailOnTestFail =
+							TrueQ @ StringMatchQ[
+								AntProperty["antFailOnTestFail"],
+								"true",
+								IgnoreCase -> True
+							];
+						,
+						AntFail["Unexpected messages when coercing ant properties."];
+					];
+					
+					AntLog[
+						"Running " <>
+						ToString[testFilesNo] <>
+						" collection" <> If[testFilesNo > 1, "s", ""] <>
+						" of tests through " <>
+						ToString[mathExecutablesNo] <>
+						" Mathematica version" <> If[mathExecutablesNo > 1, "s", ""] <>
+						"."
+					];
+					
+					fullResult = And @@ Map[
+						(
+							AntLog["\nRunning tests from " <> # <> " file."];
+							result =
+								TestRunMultipleVersions[
+									#,
+									mathExecutables,
+									Loggers :> (#[]&) /@ testLoggers
+								];
+							AntLog[
+								"Tests from " <> # <> " file " <>
+								If[result, "PASSED", "FAILED"] <> "."
+							];
+							
+							result
+						)&
+						,
+						testFiles
+					];
+					
+					If[fullResult,
+						AntLog["TESTS PASSED"];
+					(* else *),
+						If[antFailOnTestFail,
+							AntFail["TESTS FAILED"];
+						(* else *),
+							AntLog["TESTS FAILED"];
+							AntSetProperty["testsFailed", "true"];
+						];
+					];
+				];
+			]]>
+		</mathematica>
+	</target>
 	
 </project>
 
