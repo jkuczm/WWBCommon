@@ -69,7 +69,7 @@ Unprotect["`*"]
 
 (* ::Subsection:: *)
 (*Private symbols usage*)
- 
+
 
 Begin["`Private`"]
 
@@ -149,13 +149,13 @@ ToTitleCase[str_String] :=
 
 
 IfPreVer9[pre_, post_] :=
-	FEPrivate`If[ 
+	FEPrivate`If[
 		FEPrivate`Or[
 			FEPrivate`SameQ[FEPrivate`$ProductVersion, "6.0"],
 			FEPrivate`SameQ[FEPrivate`$ProductVersion, "7.0"],
 			FEPrivate`SameQ[FEPrivate`$ProductVersion, "8.0"]
 		]
-		, 
+		,
 		pre
 		,
 		post
@@ -183,7 +183,7 @@ SectionSpacerCell[style_] :=
 		CellMargins -> IfPreVer9[0, Inherited],
 		Editable -> False,
 		Selectable -> False,
-		Deletable -> False, 
+		Deletable -> False,
 		ShowCellBracket -> False,
 		ShowSelection -> False
 	]
@@ -201,11 +201,11 @@ SectionCell[style_, {preVer9FL_, ver9FL_}, opts___] :=
 		CellFrameLabelMargins -> 0,
 		CellElementSpacings -> {"CellMinHeight" -> 3},
 		CellSize -> {Inherited, IfPreVer9[11, 14]},
-		opts, 
+		opts,
 		CellFrameLabels -> {
 			{
 				IfPreVer9[
-					preVer9FL, 
+					preVer9FL,
 					ver9FL
 				],
 				None
@@ -276,10 +276,10 @@ NotebookCrossVersionFix[nb_Notebook, OptionsPattern[]] :=
 						FrameLabelCell[con, sty]
 						,
 						con /.
-			  				TextData[Cell[BoxData[box : ButtonBox[__]]]] :> TextData[box] /. 
-								_FrameBox -> 
+			  				TextData[Cell[BoxData[box : ButtonBox[__]]]] :> TextData[box] /.
+								_FrameBox ->
 									FrameLabelCell[
-										TextData[{SpacerCell, "Details and Options"}], 
+										TextData[{SpacerCell, "Details and Options"}],
 										sty
 									]
 					},
@@ -340,14 +340,14 @@ NotebookCrossVersionFix[nb_Notebook, OptionsPattern[]] :=
 					sty,
 					{
 						FrameLabelCell[con, sty]
-						, 
-						con /. (ButtonBox[str_String, bbo___] :> 
+						,
+						con /. (ButtonBox[str_String, bbo___] :>
 							ButtonBox[
 								FrameLabelCell[
 									TextData[{
 										SpacerCell,
 										ToTitleCase[str],
-										"  ", 
+										"  ",
 										"InsertExampleCount"
 									}],
 									sty

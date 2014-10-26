@@ -61,7 +61,7 @@ saves changes, and returns List of saved file names."
 	(all public symbols provided by this package)
 *)
 Unprotect["`*"]
- 
+
 
 Begin["`Private`"]
 
@@ -86,7 +86,7 @@ NotebookNoCache[nbObj_NotebookObject] :=
 		nbObj
 		,
 		(* Add "FileOutlineCache" -> False option *)
-		PrivateNotebookOptions -> 
+		PrivateNotebookOptions ->
 			Prepend[
 				FilterRules[
 					Flatten @ Cases[
