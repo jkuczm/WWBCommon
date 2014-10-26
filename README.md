@@ -14,6 +14,7 @@ Workbench.
     * [Example project configuration](#example-project-configuration)
         * [Simple docbuild](#simple-docbuild)
         * [Docbuild and deploy script](#docbuild-and-deploy-script)
+        * [Script running tests in multiple versions of Mathematica](#script-running-tests-in-multiple-versions-of-mathematica)
 * [Bugs and requests](#bugs-and-requests)
 * [Contributing](#contributing)
 * [License](#license)
@@ -29,6 +30,8 @@ Workbench.
     * disabling notebook cache,
     * disabling notebook cells history tracking,
     * removing existing cell change times.
+* Tools for running tests in multiple versions of mathematica.
+* Tools enabling inclusion of running of tests into build/deploy scripts.
 * Scripts simplifying customization of documentation building and package
   deployment.
 
@@ -94,6 +97,26 @@ steps.
    `Project` > `Properties` > `Mathematica` > `Paclet Settings` >
    `Documentation Build File`
    setting to `buildScripts/docbuild.xml`.
+
+#### Script running tests in multiple versions of Mathematica
+
+1. Copy `examples/runTests.xml` file to root directory of your project
+   (or any other location in your project).
+
+2. In copied `runTests.xml` file.
+     * Change value of `WorkbenchMUnitPath` property to path to MUnits
+       `MathematicaSourceVersioned` directory in your installation of Workbench
+       (in some installations MUnit might be inside a jar file so you'll
+       need to extract it first). Since this is a system-wide property it might
+       be preferable to set it once, for all projects, in
+       [ant runtime configuration](#ant-runtime-configuration).
+     * Value of `mathExecutables` property should be a comma separated list of
+       paths to Mathematica executables in which you want to run tests.
+     * Change value of `app.name` property to name of your application.
+     * Value of `testFiles` property should be a comma separated list of paths
+       to test files or test suite files that you want to run.
+     * If you placed `runTests.xml` somewhere else than root of your project
+       adapt `basedir` attribute of `project` element.
 
 
 ## Bugs and requests
