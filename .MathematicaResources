@@ -1,0 +1,10 @@
+Resources[
+    Version[1],
+    Sources[
+        Directory["~"]
+    ],
+    ExecutionBuildCommand["\"No build command\""],
+    Paclet[
+        FunctionPaclet[False]
+    ]
+]
