@@ -205,7 +205,8 @@ Options[TestRunMultipleVersions] =
 		{
 			"ExtraPath" -> Automatic,
 			"LinkCallingVersion" -> False,
-			"RemoteLoggers" :> {WSTPLinkLogger[First[Links[]]]}
+			"RemoteLoggers" :> {WSTPLinkLogger[First[Links[]]]},
+			"Init" -> None
 		}
 	];
 
@@ -232,7 +233,8 @@ TestRunMultipleVersions[
 	With[
 		{
 			options = Flatten[{opts, Options[TestRunMultipleVersions]}],
-			extraPathOption = OptionValue["ExtraPath"]
+			extraPathOption = OptionValue["ExtraPath"],
+			heldInit = OptionValue[Automatic, Automatic, "Init", Hold]
 		}
 		,
 		If[
@@ -245,6 +247,7 @@ TestRunMultipleVersions[
 				If[extraPathOption =!= Automatic,
 					$Path = Join[extraPathOption, $Path];
 				];
+				ReleaseHold[heldInit];
 				
 				Return @ logVersionRunTests[tests, options]
 			]
@@ -296,6 +299,10 @@ TestRunMultipleVersions[
 						MultipleVersionsTests`MUnitVersionedLoader`$WorkbenchMUnitPath
 							= workbenchMUnitPath;
 						Needs["MultipleVersionsTests`"];
+					];
+					
+					If[heldInit =!= Hold[None],
+						LinkDelegateEvaluation[link, ReleaseHold[heldInit]];
 					];
 					
 					result =
