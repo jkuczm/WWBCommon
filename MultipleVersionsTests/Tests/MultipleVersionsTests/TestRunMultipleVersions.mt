@@ -269,6 +269,40 @@ test result object: TestSource",
 		];
 	];
 	
+	
+	Block[
+		{fakeTest`testSymbol}
+		,
+		Test[
+			TestRunMultipleVersions[
+				FakeTestPath["init_required.mt"],
+				command,
+				Loggers -> {},
+				"Init" :> (fakeTest`testSymbol = 1)
+			]
+			,
+			True
+			,
+			TestID ->
+				"Init option: one evaluator: test file: returned value",
+			TestFailureMessage -> testFailureMessage
+		];
+		
+		TestMatch[
+			fakeTest`testSymbol
+			,
+			If[linkCallingVersion,
+				HoldPattern[fakeTest`testSymbol]
+			(* else *),
+				1
+			]
+			,
+			TestID -> "Init option: one evaluator: test file: \
+Init code in calling evaluator",
+			TestFailureMessage -> testFailureMessage
+		];
+	];
+	
 	,
 	
 	{linkCallingVersion, {False, True}}
