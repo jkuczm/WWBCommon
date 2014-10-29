@@ -205,7 +205,7 @@ Options[TestRunMultipleVersions] =
 		{
 			"ExtraPath" -> Automatic,
 			"LinkCallingVersion" -> False,
-			"RemoteLoggers" :> {WSTPLinkLogger[First[Links[]]]},
+			"RemoteLoggers" :> {WSTPLinkLogger[$ParentLink]},
 			"Init" -> None
 		}
 	];
