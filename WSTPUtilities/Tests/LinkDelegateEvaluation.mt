@@ -164,7 +164,7 @@ TestMatch[
 With[
 	{link = LinkLaunch[command]}
 	,
-
+	
 	Test[
 		LinkDelegateEvaluation[link, someSymbol]
 		,
@@ -183,8 +183,11 @@ With[
 	Module[
 		{someSymbol = 5}
 		,
-		LinkWrite[link, Unevaluated @ EvaluatePacket[someSymbol = 10;]];
-		While[LinkRead[link] =!= ReturnPacket[Null]];
+		LinkFullContextWrite[
+			link,
+			Unevaluated @ EvaluatePacket[someSymbol = 10;]
+		];
+		While[LinkRead[link, Hold] =!= Hold[ReturnPacket[Null]]];
 		
 		Test[
 			LinkDelegateEvaluation[link, someSymbol]
@@ -203,7 +206,7 @@ With[
 	{link = LinkLaunch[command]}
 	,
 	LinkWrite[link, someSymbol];
-
+	
 	Test[
 		LinkDelegateEvaluation[link, someSymbol2]
 		,
@@ -265,7 +268,7 @@ With[
 	
 	LinkClose[link];
 	Close[tmpStream];
-
+	
 	Test[
 		Import[First[tmpStream], "String"]
 		,
@@ -303,8 +306,9 @@ With[
 	Test[
 		Import[First[tmpStream], "String"]
 		,
-		"testFunction::argx: 
-   testFunction called with 5 arguments; 1 argument is expected."
+		"TestEnvironment`LinkDelegateEvaluation`testFunction::argx: 
+   TestEnvironment`LinkDelegateEvaluation`testFunction called with 5
+     arguments; 1 argument is expected."
 		,
 		TestID -> "Message: $Messages stream"
 	];
@@ -349,12 +353,13 @@ With[
 		,
 		TestID -> "Message and Print: $Output stream"
 	];
-
+	
 	Test[
 		Import[First[tmpMessagesStream], "String"]
 		,
-		"testFunction::argx: 
-   testFunction called with 5 arguments; 1 argument is expected."
+		"TestEnvironment`LinkDelegateEvaluation`testFunction::argx: 
+   TestEnvironment`LinkDelegateEvaluation`testFunction called with 5
+     arguments; 1 argument is expected."
 		,
 		TestID -> "Message and Print: $Messages stream"
 	];
@@ -407,7 +412,7 @@ With[
 	
 	LinkClose[link];
 	Close[tmpStream];
-
+	
 	Test[
 		Import[First[tmpStream], "String"]
 		,
@@ -442,12 +447,13 @@ With[
 	
 	LinkClose[link];
 	Close[tmpStream];
-
+	
 	Test[
 		Import[First[tmpStream], "String"]
 		,
-		"testFunction::argx: 
-   testFunction called with 5 arguments; 1 argument is expected."
+		"TestEnvironment`LinkDelegateEvaluation`testFunction::argx: 
+   TestEnvironment`LinkDelegateEvaluation`testFunction called with 5
+     arguments; 1 argument is expected."
 		,
 		TestID -> "Head option: Message: $Messages stream"
 	];
