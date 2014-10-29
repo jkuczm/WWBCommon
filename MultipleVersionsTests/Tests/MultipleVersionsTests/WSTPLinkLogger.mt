@@ -142,7 +142,7 @@ TestMatch[
 	LinkDelegateEvaluation[
 		link
 		,
-		remoteLogger = WSTPLinkLogger[First[Links[]]];
+		remoteLogger = WSTPLinkLogger[$ParentLink];
 		{Context[Evaluate[remoteLogger]], SymbolName[remoteLogger]}
 		,
 		"Head" -> HoldComplete

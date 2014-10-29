@@ -205,7 +205,8 @@ Options[TestRunMultipleVersions] =
 		{
 			"ExtraPath" -> Automatic,
 			"LinkCallingVersion" -> False,
-			"RemoteLoggers" :> {WSTPLinkLogger[First[Links[]]]}
+			"RemoteLoggers" :> {WSTPLinkLogger[$ParentLink]},
+			"Init" -> None
 		}
 	];
 
@@ -232,7 +233,8 @@ TestRunMultipleVersions[
 	With[
 		{
 			options = Flatten[{opts, Options[TestRunMultipleVersions]}],
-			extraPathOption = OptionValue["ExtraPath"]
+			extraPathOption = OptionValue["ExtraPath"],
+			heldInit = OptionValue[Automatic, Automatic, "Init", Hold]
 		}
 		,
 		If[
@@ -245,6 +247,7 @@ TestRunMultipleVersions[
 				If[extraPathOption =!= Automatic,
 					$Path = Join[extraPathOption, $Path];
 				];
+				ReleaseHold[heldInit];
 				
 				Return @ logVersionRunTests[tests, options]
 			]
@@ -256,8 +259,21 @@ TestRunMultipleVersions[
 					MultipleVersionsTests`MUnitVersionedLoader`$WorkbenchMUnitPath,
 				optionsWithLoggers =
 					Replace[
-						FilterRules[options, Except[Loggers]],
-						rule_["RemoteLoggers", val_] :> rule[Loggers, val],
+						FilterRules[options, Except[Loggers]]
+						,
+						{
+							rule_["RemoteLoggers", val_] :>
+								rule["Loggers", val]
+							,
+							(*
+								Some option names where moved from MUnit` to
+								System` context in MUnit v1.4, so make sure
+								they are passed as strings not symbols.
+							*)
+							rule_[opt_Symbol, val_] :>
+								rule[SymbolName[opt], val]
+						}
+						,
 						{1}
 					]
 				,
@@ -296,6 +312,10 @@ TestRunMultipleVersions[
 						MultipleVersionsTests`MUnitVersionedLoader`$WorkbenchMUnitPath
 							= workbenchMUnitPath;
 						Needs["MultipleVersionsTests`"];
+					];
+					
+					If[heldInit =!= Hold[None],
+						LinkDelegateEvaluation[link, ReleaseHold[heldInit]];
 					];
 					
 					result =

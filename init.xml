@@ -422,17 +422,15 @@
 			description='runs tests in all mathematica versions'>
 		<mathematica exe="${mathExe}">
 		  	<![CDATA[
-				$Path =
-					DeleteDuplicates @ Join[
-						{AntProperty["basedir"], AntProperty["WWBCommonPath"]},
-						$Path
-					];
+				PrependTo[$Path, AntProperty["WWBCommonPath"]];
+				Needs["WorkbenchUtilities`"];
 				MultipleVersionsTests`MUnitVersionedLoader`$WorkbenchMUnitPath =
 					AntProperty["WorkbenchMUnitPath"];
 				Needs["MultipleVersionsTests`"];
 				
 				Module[
 					{
+						basedir, heldEBC,
 						testFiles, testFilesNo,
 						mathExecutables, mathExecutablesNo,
 						testLoggers,
@@ -442,6 +440,7 @@
 					,
 					
 					Check[
+						basedir = AntProperty["basedir"];
 						testFiles =
 							Flatten @ ImportString[AntProperty["testFiles"], "CSV"];
 						testFilesNo = Length[testFiles];
@@ -460,6 +459,19 @@
 						AntFail["Unexpected messages when coercing ant properties."];
 					];
 					
+					$Path = DeleteDuplicates @ Prepend[$Path, basedir];
+					
+					Check[
+						heldEBC = GetExecutionBuildCommand[basedir]
+						,
+						AntFail["Error reading project execution build command."]
+						,
+						{
+							GetExecutionBuildCommand::invalidResources,
+							GetExecutionBuildCommand::invalidEBC
+						}
+					];
+					
 					AntLog[
 						"Running " <>
 						ToString[testFilesNo] <>
@@ -470,24 +482,29 @@
 						"."
 					];
 					
-					fullResult = And @@ Map[
-						(
-							AntLog["\nRunning tests from " <> # <> " file."];
-							result =
-								TestRunMultipleVersions[
-									#,
-									mathExecutables,
-									Loggers :> (#[]&) /@ testLoggers
-								];
-							AntLog[
-								"Tests from " <> # <> " file " <>
-								If[result, "PASSED", "FAILED"] <> "."
-							];
-							
-							result
-						)&
+					With[
+						{heldEBC = heldEBC}
 						,
-						testFiles
+						fullResult = And @@ Map[
+							(
+								AntLog["\nRunning tests from " <> # <> " file."];
+								result =
+									TestRunMultipleVersions[
+										#,
+										mathExecutables,
+										Loggers :> (#[]&) /@ testLoggers,
+										"Init" :> ReleaseHold[heldEBC]
+									];
+								AntLog[
+									"Tests from " <> # <> " file " <>
+									If[result, "PASSED", "FAILED"] <> "."
+								];
+								
+								result
+							)&
+							,
+							testFiles
+						]
 					];
 					
 					If[fullResult,

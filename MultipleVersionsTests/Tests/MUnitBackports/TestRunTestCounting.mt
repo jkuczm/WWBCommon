@@ -61,7 +61,7 @@ With[
 		TestID -> "one test success: returned value"
 	];
 	
-	TestMatch[
+	Test[
 		Cases[OptionValue[$listLogger, "Log"], Hold[LogEnd, __]]
 		,
 		{Hold[LogEnd, 1, 1, 0, 0, 0, 0, False]}
@@ -70,7 +70,7 @@ With[
 	];
 	
 	If[MUnit`Information`$VersionNumber >= 1.3,
-		TestMatch[
+		Test[
 			Cases[OptionValue[$listLogger, "Log"], Hold[LogTestInfo, __]]
 			,
 			{Hold[LogTestInfo, "PassedFakeTest", 1, True]}
@@ -95,7 +95,7 @@ With[
 		TestID -> "three tests failure: returned value"
 	];
 	
-	TestMatch[
+	Test[
 		Cases[OptionValue[$listLogger, "Log"], Hold[LogEnd, __]]
 		,
 		{Hold[LogEnd, 3, 1, 1, 1, 0, 0, False]}
@@ -104,7 +104,7 @@ With[
 	];
 	
 	If[MUnit`Information`$VersionNumber >= 1.3,
-		TestMatch[
+		Test[
 			Cases[OptionValue[$listLogger, "Log"], Hold[LogTestInfo, __]]
 			,
 			{

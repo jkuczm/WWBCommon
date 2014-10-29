@@ -127,7 +127,7 @@ SetAttributes[LinkFullContextWrite, HoldAllComplete]
 
 LinkFullContextWrite[args___] :=
 	Block[
-		{$ContextPath = {"System`", "Global`"}}
+		{$ContextPath = {}, $Context = "WSTPUtilities`Private`Dummy`"}
 		,
 		LinkWrite[args]
 	]

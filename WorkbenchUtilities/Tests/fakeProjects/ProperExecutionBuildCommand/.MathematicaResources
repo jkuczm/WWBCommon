@@ -1,0 +1,7 @@
+Resources[
+    Version[1],
+    ExecutionBuildCommand["Message[General::evaluated, \"ExecutionBuildCommand\"]"],
+    Paclet[
+        FunctionPaclet[False]
+    ]
+]
