@@ -259,8 +259,21 @@ TestRunMultipleVersions[
 					MultipleVersionsTests`MUnitVersionedLoader`$WorkbenchMUnitPath,
 				optionsWithLoggers =
 					Replace[
-						FilterRules[options, Except[Loggers]],
-						rule_["RemoteLoggers", val_] :> rule[Loggers, val],
+						FilterRules[options, Except[Loggers]]
+						,
+						{
+							rule_["RemoteLoggers", val_] :>
+								rule["Loggers", val]
+							,
+							(*
+								Some option names where moved from MUnit` to
+								System` context in MUnit v1.4, so make sure
+								they are passed as strings not symbols.
+							*)
+							rule_[opt_Symbol, val_] :>
+								rule[SymbolName[opt], val]
+						}
+						,
 						{1}
 					]
 				,
