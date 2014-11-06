@@ -35,6 +35,13 @@ returns execution build command, wrapped in Hold, for project from given \
 directory projectDir."
 
 
+GetProjectReferences::usage =
+"\
+GetProjectReferences[projectDir] \
+returns list of strings with names of projects referenced by project from \
+given directory projectDir."
+
+
 (* ::Section:: *)
 (*Implementation*)
 
@@ -73,11 +80,39 @@ AppendTo[$ContextPath, "WorkbenchUtilities`MathematicaResources`"]
 (*Private symbols usage*)
 
 
+oneDirectoryStringArgument::usage =
+"\
+oneDirectoryStringArgument[sym] \
+adds down values, to given symbol sym, with definitions printing apropriate \
+messages when arguments, different than one string with path to directory, \
+are given."
+
+
 getAllPackagesCommand::usage =
 "\
 getAllPackagesCommand[projectDir] \
 returns held expression that calls Get on each package from given directory \
 projectDir. This is default ExecutionBuildCommand used by Workbench."
+
+
+(* ::Subsection:: *)
+(*oneDirectoryStringArgument*)
+
+
+General::nonDir =
+"String `1` does not represent valid path to a directory."
+
+
+oneDirectoryStringArgument[sym_Symbol] := (
+	sym[str_String] := "nothing" /;
+		Message[sym::nonDir, HoldForm[str]];
+	
+	sym[arg:Except[_String]] := "nothing" /;
+		Message[sym::string, HoldForm[1], HoldForm[sym[arg]]];
+	
+	sym[args___ /; Length[{args}] != 1] := "nothing" /;
+		Message[sym::argx, HoldForm[sym], HoldForm[Evaluate @ Length[{args}]]];
+)
 
 
 (* ::Subsection:: *)
@@ -99,10 +134,6 @@ getAllPackagesCommand =
 
 (* ::Subsection:: *)
 (*GetExecutionBuildCommand*)
-
-
-GetExecutionBuildCommand::nonDir =
-"String `1` does not represent valid path to a directory."
 
 GetExecutionBuildCommand::invalidResources =
 "File `1` does not contain valid project resources."
@@ -206,20 +237,56 @@ GetExecutionBuildCommand[dir_String /; FileType[dir] === Directory] :=
 		]
 	]
 
-GetExecutionBuildCommand[str_String] := "nothing" /;
-	Message[GetExecutionBuildCommand::nonDir, HoldForm[str]]
+oneDirectoryStringArgument[GetExecutionBuildCommand]
 
-GetExecutionBuildCommand[arg:Except[_String]] := "nothing" /;
-	Message[GetExecutionBuildCommand::string,
-		HoldForm[1],
-		HoldForm[GetExecutionBuildCommand[arg]]
+
+(* ::Subsection:: *)
+(*GetProjectReferences*)
+
+
+GetProjectReferences::noValidProjectDescription =
+"Directory `1` does not contain valid project description file."
+
+
+GetProjectReferences[dir_String /; FileType[dir] === Directory] :=
+	Module[
+		{result}
+		,
+		
+		result = Import[FileNameJoin[{dir, ".project"}], "XML"];
+		
+		If[Head[result] =!= XMLObject["Document"],
+			Message[GetProjectReferences::noValidProjectDescription,
+				HoldForm[dir]
+			];
+			Return[$Failed]
+		];
+		
+		(* Get list of children of "projects" XML element. *)
+		result =
+			Flatten @ Cases[
+				result
+				,
+				XMLElement["projectDescription", _, {
+					___,
+					XMLElement["projects", {}, projects_List],
+					___
+				}] :>
+					projects
+				,
+				Infinity
+				,
+				1
+			];
+		
+		(* Return list of project names. *)
+		Cases[
+			result,
+			XMLElement["project", {}, {name_String}] :> name
+		]
 	]
 
-GetExecutionBuildCommand[args___ /; Length[{args}] != 1] := "nothing" /;
-	Message[GetExecutionBuildCommand::argx,
-		HoldForm[GetExecutionBuildCommand],
-		HoldForm[Evaluate @ Length[{args}]]
-	]
+oneDirectoryStringArgument[GetProjectReferences]
 
 
 End[]
