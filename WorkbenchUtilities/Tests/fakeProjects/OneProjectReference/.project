@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectDescription>
+	<name>FakeProjectOneProjectReference</name>
+	<comment></comment>
+	<projects>
+		<project>FakeReferencedProject</project>
+	</projects>
+	<buildSpec>
+		<buildCommand>
+			<name>com.wolfram.eclipse.MEET.MathematicaProjectBuilder</name>
+			<arguments>
+			</arguments>
+		</buildCommand>
+	</buildSpec>
+	<natures>
+		<nature>com.wolfram.eclipse.MEET.SimpleMathematicaNature</nature>
+	</natures>
+</projectDescription>
