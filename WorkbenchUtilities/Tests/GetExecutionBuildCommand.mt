@@ -26,20 +26,10 @@
 
 
 BeginPackage["TestEnvironment`GetExecutionBuildCommand`", {"MUnit`"}]
-Begin["`Private`"]
 
 
 Get["WorkbenchUtilities`"]
-
-
-General::evaluated = "`1` was evaluated."
-
-
-fakeProjectsDir =
-	FileNameJoin[{
-		DirectoryName @ FindFile["WorkbenchUtilities`WorkbenchUtilities`"],
-		"Tests/fakeProjects"
-	}]
+Get["WorkbenchUtilities`Tests`Utilities`"]
 
 
 (* ::Section:: *)
@@ -119,10 +109,7 @@ TestMatch[
 
 
 With[
-	{
-		fakeProjectDir =
-			FileNameJoin[{fakeProjectsDir, "NoMathematicaResources"}]
-	}
+	{fakeProjectDir = fakeProjectPath["NoMathematicaResources"]}
 	,
 	Test[
 		GetExecutionBuildCommand[fakeProjectDir]
@@ -160,15 +147,14 @@ With[
 With[
 	{
 		mathematicaResourcesPath =
-			FileNameJoin[{
-				fakeProjectsDir,
+			fakeProjectPath[
 				"MalformedMathematicaResources/.MathematicaResources"
-			}]
+			]
 	}
 	,
 	Test[
 		GetExecutionBuildCommand @
-			FileNameJoin[{fakeProjectsDir, "MalformedMathematicaResources"}]
+			fakeProjectPath["MalformedMathematicaResources"]
 		,
 		$Failed
 		,
@@ -187,10 +173,7 @@ With[
 
 
 With[
-	{
-		fakeProjectDir =
-			FileNameJoin[{fakeProjectsDir, "NoExecutionBuildCommand"}]
-	}
+	{fakeProjectDir = fakeProjectPath["NoExecutionBuildCommand"]}
 	,
 	Test[
 		GetExecutionBuildCommand[fakeProjectDir]
@@ -228,15 +211,14 @@ With[
 With[
 	{
 		mathematicaResourcesPath =
-			FileNameJoin[{
-				fakeProjectsDir,
+			fakeProjectPath[
 				"InvalidExecutionBuildCommand/.MathematicaResources"
-			}]
+			]
 	}
 	,
 	Test[
 		GetExecutionBuildCommand @
-			FileNameJoin[{fakeProjectsDir, "InvalidExecutionBuildCommand"}]
+			fakeProjectPath["InvalidExecutionBuildCommand"]
 		,
 		$Failed
 		,
@@ -253,7 +235,7 @@ With[
 
 Test[
 	GetExecutionBuildCommand @
-		FileNameJoin[{fakeProjectsDir, "ExecutionBuildCommandSyntaxError"}]
+		fakeProjectPath["ExecutionBuildCommandSyntaxError"]
 	,
 	$Failed
 	,
@@ -269,7 +251,7 @@ Test[
 
 Test[
 	GetExecutionBuildCommand @
-		FileNameJoin[{fakeProjectsDir, "ProperExecutionBuildCommand"}]
+		fakeProjectPath["ProperExecutionBuildCommand"]
 	,
 	Hold[Message[General::evaluated, "ExecutionBuildCommand"]]
 	,
@@ -285,6 +267,5 @@ Unprotect["`*"]
 Quiet[Remove["`*"], {Remove::rmnsm}]
 
 
-End[]
 EndPackage[]
 $ContextPath = Rest[$ContextPath]
