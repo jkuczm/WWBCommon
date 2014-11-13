@@ -430,7 +430,7 @@
 				
 				Module[
 					{
-						basedir, heldEBC,
+						basedir, resources, heldEBC,
 						testFiles, testFilesNo,
 						mathExecutables, mathExecutablesNo,
 						testLoggers,
@@ -462,14 +462,12 @@
 					$Path = DeleteDuplicates @ Prepend[$Path, basedir];
 					
 					Check[
-						heldEBC = GetExecutionBuildCommand[basedir]
+						resources = GetMathematicaResources[basedir];
+						heldEBC = resources@ExecutionBuildCommand;
 						,
-						AntFail["Error reading project execution build command."]
+						AntFail["Error in project .MathematicaResources."]
 						,
-						{
-							GetExecutionBuildCommand::invalidResources,
-							GetExecutionBuildCommand::invalidEBC
-						}
+						{Resources::invalidResources, Resources::invalidEBC}
 					];
 					
 					AntLog[

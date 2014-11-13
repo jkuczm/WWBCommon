@@ -28,11 +28,20 @@ BeginPackage["WorkbenchUtilities`"]
 (*Usage messages*)
 
 
-GetExecutionBuildCommand::usage =
+Resources::usage =
 "\
-GetExecutionBuildCommand[projectDir] \
-returns execution build command, wrapped in Hold, for project from given \
-directory projectDir."
+Resources[resource1, resource2, ...] \
+represents resources of a project, extracted from .MathematicaResources file.\
+
+Resources[...][\"name\"] \
+returns preprocessed resource with given \"name\"."
+
+
+GetMathematicaResources::usage =
+"\
+GetMathematicaResources[projectDir] \
+returns resources of a project, extracted from .MathematicaResources file \
+from given directory projectDir."
 
 
 GetProjectReferences::usage =
@@ -46,28 +55,31 @@ given directory projectDir."
 (*Implementation*)
 
 
-(*
-	Unprotect all symbols in this context
-	(all public symbols provided by this package)
-*)
+(*	Unprotect all symbols in this context
+	(all public symbols provided by this package) *)
 Unprotect["`*"]
 
 
 (* ::Subsection:: *)
-(*MathematicaResources*)
+(*MathematicaResources symbols*)
 
 
-(*
-	Context with relevant symbols that can be found in project
-	.MathematicaResources file.
-*)
-Begin["`MathematicaResources`"]
-
-Resources
-
-ExecutionBuildCommand
-
-End[]
+(*	Put symbols that can be found in project .MathematicaResources file in
+	proper context, except ones that are also in System` context.
+	Prevent evaluation of their elements. *)
+SetAttributes[Evaluate @ Symbol["`MathematicaResources`" <> #], HoldAll]& /@ {
+	"Sources",
+	"Java",
+	"GUI",
+	"Palettes",
+	"StyleSheets",
+	"IndexExcludes",
+	"ExecutionBuildCommand",
+	"Paclet",
+	"DocumentationBuildFile",
+	"PacletFolder",
+	"FunctionPaclet"
+}
 	
 
 Begin["`Private`"]
@@ -99,11 +111,13 @@ projectDir. This is default ExecutionBuildCommand used by Workbench."
 (*oneDirectoryStringArgument*)
 
 
-General::nonDir =
+oneDirectoryStringArgument::nonDir =
 "String `1` does not represent valid path to a directory."
 
 
 oneDirectoryStringArgument[sym_Symbol] := (
+	sym::nonDir = oneDirectoryStringArgument::nonDir;
+	
 	sym[str_String] := "nothing" /;
 		Message[sym::nonDir, HoldForm[str]];
 	
@@ -133,97 +147,91 @@ getAllPackagesCommand =
 
 
 (* ::Subsection:: *)
-(*GetExecutionBuildCommand*)
+(*Resources*)
 
-GetExecutionBuildCommand::invalidResources =
+
+Resources::invalidResources =
 "File `1` does not contain valid project resources."
 
-GetExecutionBuildCommand::invalidEBC =
-"ExecutionBuildCommand found in `1` file is invalid."
+Resources::unknownSelector =
+"An unknown resource selector used: `1`."
+
+Resources::invalidElement =
+"Resource element: `1` found in `2` file is invalid."
+
+Resources::invalidPaths = Resources::invalidElement <>
+" '3' element can contain only Directory[\"...\"] and File[\"...\"] elements."
+
+Resources::invalidEBC = Resources::invalidElement <>
+" ExecutionBuildCommand element should contain exactly one string with \
+correct mathematica expression."
 
 
-GetExecutionBuildCommand[dir_String /; FileType[dir] === Directory] :=
+SetAttributes[Resources, HoldAll]
+
+
+Resources[res___][sym_Symbol] := Resources[res][SymbolName[sym]]
+
+
+Resources[args___, opts:OptionsPattern[]][
+	sel:(
+		"Sources" | "Java" | "GUI" | "Palettes" |
+		"StyleSheets" | "IndexExcludes"
+	)
+] :=
+	With[
+		{
+			resourcesFile = OptionValue[opts, "ResourcesFile"],
+			heldElement = Select[Hold[args], SymbolName[Head[#]] === sel &, 1]
+		}
+		,
+		If[MemberQ[heldElement, Except[(Directory | File)[_String]], {2}],
+			Message[Resources::invalidPaths,
+				HoldForm @@ heldElement,
+				HoldForm[resourcesFile],
+				HoldForm[Evaluate[heldElement[[1, 0]]]]
+			];
+			Return[$Failed]
+		];
+		
+		With[
+			{projectDir = FileNameJoin @ DirectoryName[resourcesFile]}
+			,
+			List @@ Replace[
+				heldElement
+				,
+				{
+					HoldPattern[Directory]["~"] -> projectDir
+					,
+					(Directory | File)[relPath_String] ->
+						FileNameJoin[{projectDir, relPath}]
+				}
+				,
+				{2}
+			][[1]]
+		]
+	]
+
+
+Resources[___, ExecutionBuildCommand[ebc_String], ___, opts:OptionsPattern[]][
+	"ExecutionBuildCommand"
+] :=
 	Module[
-		{resources, executionBuildCommand}
+		{result}
 		,
 		With[
-			{resourcesFile = FileNameJoin[{dir, ".MathematicaResources"}]}
+			{resourcesFile = OptionValue[opts, "ResourcesFile"]}
 			,
-			Quiet[
-				Check[
-					resources =
-						(*
-							Make sure that all symbols from
-							.MathematicaResources file are placed in correct
-							context.
-						*)
-						Block[
-							{
-								$Context =
-									"WorkbenchUtilities`MathematicaResources`"
-							}
-							,
-							ReadList[resourcesFile, Hold[Expression]]
-						]
+			Check[
+				Block[
+					{$Context = "WorkbenchUtilities`MathematicaResources`"}
 					,
-					(*
-						Project does not contain .MathematicaResources file,
-						use default ExecutionBuildCommand.
-					*)
-					Return[getAllPackagesCommand[dir]]
-					,
-					{ReadList::nffil}
+					result = ToExpression[ebc, InputForm, Hold]
 				]
 				,
-				{ReadList::nffil}
-			];
-			
-			resources = Cases[resources, Hold[Resources[___]], {1}, 1];
-			
-			If[resources === {},
 				Message[
-					GetExecutionBuildCommand::invalidResources,
-					HoldForm[resourcesFile]
-				];
-				Return[$Failed]
-			];
-			resources = First[resources];
-			
-			executionBuildCommand =
-				Cases[resources, _ExecutionBuildCommand, {2}, 1];
-			
-			If[executionBuildCommand === {},
-				(*
-					.MathematicaResources contained no ExecutionBuildCommand,
-					use default one.
-				*)
-				Return[getAllPackagesCommand[dir]]
-			];
-			
-			executionBuildCommand = First[executionBuildCommand];
-			
-			If[!MatchQ[executionBuildCommand, ExecutionBuildCommand[_String]],
-				Message[
-					GetExecutionBuildCommand::invalidEBC,
-					HoldForm[resourcesFile]
-				];
-				Return[$Failed]
-			];
-			
-			Check[
-				executionBuildCommand =
-					Block[
-						{$Context = "WorkbenchUtilities`MathematicaResources`"}
-						,
-						ToExpression[
-							First[executionBuildCommand],
-							InputForm,
-							Hold
-						]
-					]
-				,
-				Message[
-					GetExecutionBuildCommand::invalidEBC,
+					Resources::invalidEBC,
+					HoldForm[ExecutionBuildCommand[ebc]],
 					HoldForm[resourcesFile]
 				]
 				,
@@ -233,11 +241,90 @@ GetExecutionBuildCommand[dir_String /; FileType[dir] === Directory] :=
 				}
 			];
 			
-			executionBuildCommand
+			result
 		]
 	]
 
-oneDirectoryStringArgument[GetExecutionBuildCommand]
+Resources[___, ebc_ExecutionBuildCommand, ___, opts:OptionsPattern[]][
+	"ExecutionBuildCommand"
+] :=
+	With[
+		{resourcesFile = OptionValue[opts, "ResourcesFile"]}
+		,
+		Message[Resources::invalidEBC,
+			HoldForm[ebc],
+			HoldForm[resourcesFile]
+		];
+		Return[$Failed]
+	]
+
+Resources[___, opts:OptionsPattern[]]["ExecutionBuildCommand"] :=
+	getAllPackagesCommand[DirectoryName @ OptionValue[opts, "ResourcesFile"]]
+
+
+Resources[___][arg_String] := "nothing" /;
+	Message[Resources::unknownSelector, HoldForm[arg]];
+
+Resources[___][args___ /; Length[{args}] != 1] := "nothing" /;
+	Message[Resources::argx,
+		HoldForm["Resources object"],
+		HoldForm[Evaluate @ Length[{args}]]
+	];
+
+
+(* ::Subsection:: *)
+(*GetMathematicaResources*)
+
+
+GetMathematicaResources[dir_String /; FileType[dir] === Directory] :=
+	Module[
+		{resources}
+		,
+		With[
+			{resourcesFile = FileNameJoin[{dir, ".MathematicaResources"}]}
+			,
+			Quiet[
+				Check[
+					resources =
+						(*	Make sure that all symbols from
+							.MathematicaResources file are placed in correct
+							context. *)
+						Block[
+							{
+								$ContextPath = {
+									"WorkbenchUtilities`MathematicaResources`",
+									"WorkbenchUtilities`",
+									"System`"
+								},
+								$Context =
+									"WorkbenchUtilities`MathematicaResources`"
+							}
+							,
+							ReadList[resourcesFile, HoldComplete[Expression]]
+						]
+					,
+					(*	Project does not contain .MathematicaResources file,
+						return empty Resources. *)
+					Return[Resources["ResourcesFile" -> resourcesFile]]
+					,
+					ReadList::nffil
+				]
+				,
+				ReadList::nffil
+			];
+			
+			resources = Cases[resources, HoldComplete[Resources[___]], {1}, 1];
+			
+			If[resources === {},
+				Message[Resources::invalidResources, HoldForm[resourcesFile]];
+				Return[$Failed]
+			];
+			
+			Append[resources[[1, 1]], "ResourcesFile" -> resourcesFile]
+		]
+	]
+
+oneDirectoryStringArgument[GetMathematicaResources]
 
 
 (* ::Subsection:: *)
@@ -296,10 +383,8 @@ End[]
 (*Public symbols protection*)
 
 
-(*
-	Protect all symbols in this context
-	(all public symbols provided by this package)
-*)
+(*	Protect all symbols in this context
+	(all public symbols provided by this package) *)
 Protect["`*"]
 
 

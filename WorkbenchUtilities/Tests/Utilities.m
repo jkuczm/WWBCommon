@@ -35,8 +35,25 @@ BeginPackage["WorkbenchUtilities`Tests`Utilities`"]
 fakeProjectPath::usage =
 "\
 fakeProjectPath[relativePath] \
-returns absolute path file with given path relative to fake projects \
-directory."
+returns absolute path treating given relativePath as relative to fake \
+projects directory."
+
+
+uniqueProjectPath::usage =
+"\
+uniqueProjectPath[] \
+returns absolute path to unique fake project directory."
+
+
+getMRPath::usage =
+"\
+getMRPath[] \
+returns absolute path to .MathematicaResources file in unique fake temporary \
+project directory.\
+
+getMRPath[projectDir] \
+returns absolute path to .MathematicaResources file in given project \
+directory projectDir."
 
 
 (* ::Section:: *)
@@ -47,14 +64,14 @@ Begin["`Private`"]
 
 
 (* ::Subsection:: *)
-(*General messages*)
+(*Messages*)
 
 
-General::evaluated = "`1` was evaluated."
+test::evaluated = "`1` was evaluated."
 
 
 (* ::Subsection:: *)
-(*listLogger*)
+(*fakeProjectPath*)
 
 
 fakeProjectPath[fakeProjectName_String] :=
@@ -62,6 +79,28 @@ fakeProjectPath[fakeProjectName_String] :=
 		DirectoryName @ FindFile["WorkbenchUtilities`WorkbenchUtilities`"],
 		"Tests/fakeProjects",
 		fakeProjectName
+	}]
+
+
+(* ::Subsection:: *)
+(*uniqueProjectPath*)
+
+
+uniqueProjectPath[] := FileNameJoin[{"path/to", ToString @ Unique["project"]}]
+
+
+(* ::Subsection:: *)
+(*getMRPath*)
+
+
+getMRPath[projectPath:(_String | Automatic):Automatic] :=
+	FileNameJoin[{
+		If[projectPath === Automatic,
+			uniqueProjectPath[]
+		(* else *),
+			projectPath
+		],
+		".MathematicaResources"
 	}]
 
 

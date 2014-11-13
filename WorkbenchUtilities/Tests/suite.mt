@@ -1,7 +1,9 @@
 (* Mathematica Test File *)
 
 TestSuite[{
-	"GetExecutionBuildCommand.mt"
+	"GetMathematicaResources.mt"
+	,
+	"Resources.mt"
 	,
 	"GetProjectReferences.mt"
 }]

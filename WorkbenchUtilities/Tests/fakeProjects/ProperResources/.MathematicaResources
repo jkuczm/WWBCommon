@@ -1,0 +1,29 @@
+Resources[
+    Version[1],
+    Sources[
+        Directory["~"],
+        Directory["testSourcesDir1"],
+        Directory["testSourcesDir2"]
+    ],
+    Java[
+        Directory["testJavaDir"]
+    ],
+    GUI[
+        Directory["testGUIDir"]
+    ],
+    Palettes[
+        Directory["testPalettesDir"]
+    ],
+    StyleSheets[
+        Directory["testStyleSheetsDir"]
+    ],
+    IndexExcludes[
+        File["testFile"]
+    ],
+    ExecutionBuildCommand["testExecutionBuildCommand"],
+    Paclet[
+        DocumentationBuildFile["testDocbuild.xml"],
+        PacletFolder["testPacletDir"],
+        FunctionPaclet[False]
+    ]
+]
