@@ -430,7 +430,7 @@
 				
 				Module[
 					{
-						basedir, resources, heldEBC,
+						basedir, resources, heldEBC, sources,
 						testFiles, testFilesNo,
 						mathExecutables, mathExecutablesNo,
 						testLoggers,
@@ -464,11 +464,14 @@
 					Check[
 						resources = GetMathematicaResources[basedir];
 						heldEBC = resources@ExecutionBuildCommand;
+						sources = resources@Sources;
 						,
 						AntFail["Error in project .MathematicaResources."]
 						,
-						{Resources::invalidResources, Resources::invalidEBC}
+						{Resources::invalidResources, Resources::invalidEBC, Resources::invalidPaths}
 					];
+					
+					$Path = DeleteDuplicates @ Join[sources, $Path];
 					
 					AntLog[
 						"Running " <>
