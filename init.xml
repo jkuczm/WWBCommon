@@ -430,7 +430,8 @@
 				
 				Module[
 					{
-						basedir, resources, heldEBC, sources,
+						basedir, extraPath,
+						resources, heldEBC, sources,
 						testFiles, testFilesNo,
 						mathExecutables, mathExecutablesNo,
 						testLoggers,
@@ -441,6 +442,15 @@
 					
 					Check[
 						basedir = AntProperty["basedir"];
+						
+						extraPath = AntProperty["testsExtraPath"];
+						extraPath =
+							If[StringQ[extraPath],
+								Flatten @ ImportString[extraPath, "CSV"]
+							(* else *),
+								{}
+							];
+						
 						testFiles =
 							Flatten @ ImportString[AntProperty["testFiles"], "CSV"];
 						testFilesNo = Length[testFiles];
@@ -471,7 +481,7 @@
 						{Resources::invalidResources, Resources::invalidEBC, Resources::invalidPaths}
 					];
 					
-					$Path = DeleteDuplicates @ Join[sources, $Path];
+					$Path = DeleteDuplicates @ Join[extraPath, sources, $Path];
 					
 					AntLog[
 						"Running " <>
