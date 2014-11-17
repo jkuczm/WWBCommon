@@ -1,5 +1,5 @@
 # Wolfram Workbench Common
-[![release v0.2.1](http://img.shields.io/badge/release-v0.2.1-orange.svg)](https://github.com/jkuczm/WWBCommon/releases/latest)
+[![release v0.2.2](http://img.shields.io/badge/release-v0.2.2-orange.svg)](https://github.com/jkuczm/WWBCommon/releases)
 [![license GPLv3](http://jkuczm.github.io/media/images/license-GPLv3-brightgreen.svg)](https://github.com/jkuczm/WWBCommon/blob/master/LICENSE)
 
 
