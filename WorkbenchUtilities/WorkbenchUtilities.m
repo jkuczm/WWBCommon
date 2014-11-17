@@ -185,6 +185,11 @@ Resources[args___, opts:OptionsPattern[]][
 			heldElement = Select[Hold[args], SymbolName[Head[#]] === sel &, 1]
 		}
 		,
+		If[heldElement === Hold[],
+			(* Given element not found, return epty list. *)
+			Return[{}]
+		];
+		
 		If[MemberQ[heldElement, Except[(Directory | File)[_String]], {2}],
 			Message[Resources::invalidPaths,
 				HoldForm @@ heldElement,

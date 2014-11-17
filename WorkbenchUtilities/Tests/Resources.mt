@@ -237,6 +237,21 @@ Do[
 		With[
 			{resourcesFile = getMRPath[]}
 			,
+			Test[
+				Resources[
+					"ResourcesFile" -> resourcesFile
+				]@resource
+				,
+				{}
+				,
+				TestID -> "Paths: no element",
+				TestFailureMessage -> ToString[resource]
+			]
+		];
+		
+		With[
+			{resourcesFile = getMRPath[]}
+			,
 			Module[
 				{wrongElement}
 				,
