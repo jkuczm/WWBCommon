@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectDescription>
+	<name>FakeProjectManyProjectReferences</name>
+	<comment></comment>
+	<projects>
+		<project>FakeReferencedProject1</project>
+		<project>FakeReferencedProject2</project>
+		<project>FakeReferencedProject3</project>
+	</projects>
+	<buildSpec>
+		<buildCommand>
+			<name>com.wolfram.eclipse.MEET.MathematicaProjectBuilder</name>
+			<arguments>
+			</arguments>
+		</buildCommand>
+	</buildSpec>
+	<natures>
+		<nature>com.wolfram.eclipse.MEET.SimpleMathematicaNature</nature>
+	</natures>
+</projectDescription>

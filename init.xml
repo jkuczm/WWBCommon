@@ -430,7 +430,8 @@
 				
 				Module[
 					{
-						basedir, heldEBC,
+						basedir, extraPath,
+						resources, heldEBC, sources,
 						testFiles, testFilesNo,
 						mathExecutables, mathExecutablesNo,
 						testLoggers,
@@ -441,6 +442,15 @@
 					
 					Check[
 						basedir = AntProperty["basedir"];
+						
+						extraPath = AntProperty["testsExtraPath"];
+						extraPath =
+							If[StringQ[extraPath],
+								Flatten @ ImportString[extraPath, "CSV"]
+							(* else *),
+								{}
+							];
+						
 						testFiles =
 							Flatten @ ImportString[AntProperty["testFiles"], "CSV"];
 						testFilesNo = Length[testFiles];
@@ -462,15 +472,16 @@
 					$Path = DeleteDuplicates @ Prepend[$Path, basedir];
 					
 					Check[
-						heldEBC = GetExecutionBuildCommand[basedir]
+						resources = GetMathematicaResources[basedir];
+						heldEBC = resources@ExecutionBuildCommand;
+						sources = resources@Sources;
 						,
-						AntFail["Error reading project execution build command."]
+						AntFail["Error in project .MathematicaResources."]
 						,
-						{
-							GetExecutionBuildCommand::invalidResources,
-							GetExecutionBuildCommand::invalidEBC
-						}
+						{Resources::invalidResources, Resources::invalidEBC, Resources::invalidPaths}
 					];
+					
+					$Path = DeleteDuplicates @ Join[extraPath, sources, $Path];
 					
 					AntLog[
 						"Running " <>
