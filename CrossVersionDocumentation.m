@@ -348,7 +348,7 @@ NotebookCrossVersionFix[nb_Notebook, OptionsPattern[]] :=
 										SpacerCell,
 										ToTitleCase[str],
 										"  ",
-										"InsertExampleCount"
+										"CrossVersionDocumentation`ExampleCountPlaceholder"
 									}],
 									sty
 								],
@@ -398,11 +398,18 @@ NotebookCrossVersionFix[nb_Notebook, OptionsPattern[]] :=
 		(* Add total example count to Examples section heading in version 9 *)
 		expr = expr /.
 			(examplegroup : Cell[CellGroupData[{Cell[_, "PrimaryExamplesSection", ___], ___}, ___], ___]) :> (
-				examplegroup /. "InsertExampleCount" ->
+				examplegroup /. "CrossVersionDocumentation`ExampleCountPlaceholder" ->
 					Cell[
 						"(" <> ToString@Total@Cases[
-							examplegroup,
-							Cell[countstring_, "ExampleCount"] :> ToExpression[countstring],
+							examplegroup
+							,
+							Cell[data_, "ExampleSection", "ExampleSection", ___] :> First@Cases[
+								data,
+								Cell[countstring_, "ExampleCount"] :> ToExpression[countstring],
+								Infinity,
+								1
+							]
+							,
 							Infinity
 						] <> ")"
 						,
