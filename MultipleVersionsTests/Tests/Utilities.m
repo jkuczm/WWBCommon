@@ -285,7 +285,9 @@ testRunEndLogs[
 (*fakeOneTestFileLogs*)
 
 
-fakeOneTestFileLogs[testFile_String, testID_, logFunction_Symbol] := {
+fakeOneTestFileLogs[
+		testFile_String, testID_, logFunction_Symbol, additionalTestSources_:{}
+] := {
 	Hold[LogBeginTestSource, Evaluate @ FakeTestPath[testFile]],
 	If[MUnit`Information`$VersionNumber >= 1.3,
 		{
@@ -308,6 +310,7 @@ fakeOneTestFileLogs[testFile_String, testID_, logFunction_Symbol] := {
 			]
 		}
 	],
+	additionalTestSources,
 	Hold[logFunction, _],
 	If[MUnit`Information`$VersionNumber >= 1.3,
 		Hold[LogTestRunProgress, 1]
