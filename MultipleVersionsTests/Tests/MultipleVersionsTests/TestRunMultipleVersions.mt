@@ -44,6 +44,40 @@ Get["MultipleVersionsTests`Tests`Utilities`"]
 *)
 ToString["", InputForm, CharacterEncoding -> "ASCII"]
 
+(* Load Macros` here to avoid unecessary logging of its loading by MUnit. *)
+If[$VersionNumber >= 10,
+	Block[{$ContextPath}, Needs["Macros`"]]
+]
+
+
+$macrosTestSources = {
+	Hold[LogBeginTestSource, "GeneralUtilitiesLoader`"],
+	Hold[LogTestRunProgress, 0],
+	Hold[LogBeginTestSource, "Macros`"],
+	Hold[LogTestRunProgress, 0],
+	Hold[LogBeginTestSource, "MacrosLoader`"],
+	Hold[LogTestRunProgress, 0],
+	Hold[LogBeginTestSource, _],
+	Hold[LogTestRunProgress, 0],
+	(* Since v10.1 CharacterEncodings/PrintableASCII.m is also loaded. *)
+	If[$VersionNumber >= 10.1,
+		{
+			Hold[LogBeginTestSource, _],
+			Hold[LogTestRunProgress, 0],
+			Hold[LogTestRunProgress, _?NumberQ],
+			Hold[LogEndTestSource]
+		}
+	],
+	Hold[LogTestRunProgress, _?NumberQ],
+	Hold[LogEndTestSource],
+	Hold[LogTestRunProgress, _?NumberQ],
+	Hold[LogEndTestSource],
+	Hold[LogTestRunProgress, _?NumberQ],
+	Hold[LogEndTestSource],
+	Hold[LogTestRunProgress, _?NumberQ],
+	Hold[LogEndTestSource]
+} // Flatten // DeleteCases[#, Null]&
+
 
 command = First[$CommandLine]
 
@@ -86,7 +120,20 @@ Do[
 					]
 				],
 				testRunStartLogs["test_success.mt"],
-				$testSuccessLogs,
+				(*
+					MUnit logs loading of files related to Macros` package
+					using LogBeginTestSource and LogEndTestSource, although
+					they are not really test sources. This is a feature/bug of
+					MUnit.
+				*)
+				If[MUnit`Information`$VersionNumber >= 1.4 && linkCallingVersion,
+					fakeOneTestFileLogs[
+						"test_success.mt", "PassedFakeTest", LogSuccess,
+						$macrosTestSources
+					]
+				(* else *),
+					$testSuccessLogs
+				],
 				testRunEndLogs[2, True, 1, 1, 0, 0, 0, 0]
 			} // Flatten // DeleteCases[#, Null]&
 			,
@@ -179,36 +226,37 @@ test result object: TestSource",
 						Hold[LogTestRunProgress, _?NumberQ]
 					}
 				],
-				$testSuccessLogs,
+				(*
+					MUnit logs loading of files related to Macros` package
+					using LogBeginTestSource and LogEndTestSource, although
+					they are not really test sources. This is a feature/bug of
+					MUnit.
+				*)
+				If[MUnit`Information`$VersionNumber >= 1.4 && linkCallingVersion,
+					fakeOneTestFileLogs[
+						"test_success.mt", "PassedFakeTest", LogSuccess,
+						$macrosTestSources
+					]
+				(* else *),
+					$testSuccessLogs
+				],
 				$testFailureLogs,
-				If[MUnit`Information`$VersionNumber >= 1.4,
-					{
-						Hold[
-							LogBeginTestSource,
-							Evaluate @ FakeTestPath["test_message_failure.mt"]
-						],
-						Hold[LogTestRunProgress, 0],
-						Hold[LogTestRunProgress, 0],
-						Hold[LogTestRunProgress, _?NumberQ],
-						Hold[LogTestRunProgress, _?NumberQ],
-						Hold[LogTestInfo, "MessageFailedFakeTest", 1, True],
-						(*
-							MUnit logs loading of CharacterEncoding/ASCI.m file
-							using LogBeginTestSource and LogEndTestSource.
-							This is a feature/bug of MUnit.
-						*)
-						If[linkCallingVersion,
-							{
-								Hold[LogBeginTestSource, _],
-								Hold[LogTestRunProgress, 0],
-								Hold[LogTestRunProgress, _?NumberQ],
-								Hold[LogEndTestSource]
-							}
-						],
-						Hold[LogMessagesFailure, _],
-						Hold[LogTestRunProgress, 1],
-						Hold[LogEndTestSource]
-					}
+				(*
+					MUnit logs loading of CharacterEncoding/ASCI.m file using
+					LogBeginTestSource and LogEndTestSource, although it is not
+					really test source. This is a feature/bug of MUnit.
+				*)
+				If[MUnit`Information`$VersionNumber >= 1.4 && linkCallingVersion,
+					fakeOneTestFileLogs[
+						"test_message_failure.mt", "MessageFailedFakeTest",
+						LogMessagesFailure,
+						{
+							Hold[LogBeginTestSource, _],
+							Hold[LogTestRunProgress, 0],
+							Hold[LogTestRunProgress, _?NumberQ],
+							Hold[LogEndTestSource]
+						}
+					]
 				(* else *),
 					$testMessageFailureLogs
 				],
@@ -237,7 +285,20 @@ test result object: TestSource",
 					]
 				],
 				testRunStartLogs["test_failure.mt"],
-				$testFailureLogs,
+				(*
+					MUnit logs loading of files related to Macros` package
+					using LogBeginTestSource and LogEndTestSource, although
+					they are not really test sources. This is a feature/bug of
+					MUnit.
+				*)
+				If[MUnit`Information`$VersionNumber >= 1.4 && linkCallingVersion,
+					fakeOneTestFileLogs[
+						"test_failure.mt", "FailedFakeTest", LogFailure,
+						$macrosTestSources
+					]
+				(* else *),
+					$testFailureLogs
+				],
 				testRunEndLogs[2, False, 1, 0, 1, 0, 0, 0]
 			} // Flatten // DeleteCases[#, Null]&
 		}
