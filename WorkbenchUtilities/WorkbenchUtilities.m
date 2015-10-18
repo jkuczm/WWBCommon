@@ -312,10 +312,10 @@ GetMathematicaResources[dir_String /; FileType[dir] === Directory] :=
 						return empty Resources. *)
 					Return[Resources["ResourcesFile" -> resourcesFile]]
 					,
-					ReadList::nffil
+					{ReadList::nffil, ReadList::noopen}
 				]
 				,
-				ReadList::nffil
+				{ReadList::nffil, ReadList::noopen}
 			];
 			
 			resources = Cases[resources, HoldComplete[Resources[___]], {1}, 1];

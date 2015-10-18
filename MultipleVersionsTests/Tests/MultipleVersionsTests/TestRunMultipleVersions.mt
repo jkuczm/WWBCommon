@@ -60,7 +60,7 @@ $macrosTestSources = {
 	Hold[LogBeginTestSource, _],
 	Hold[LogTestRunProgress, 0],
 	(* Since v10.1 CharacterEncodings/PrintableASCII.m is also loaded. *)
-	If[$VersionNumber >= 10.1,
+	If[10.1 <= $VersionNumber <= 10.2,
 		{
 			Hold[LogBeginTestSource, _],
 			Hold[LogTestRunProgress, 0],
