@@ -38,25 +38,155 @@ Get["MultipleVersionsTests`MUnitBackports`"]
 (*Tests*)
 
 
+(* ::Subsection:: *)
+(*SameTest*)
+
+
+(* ::Subsubsection:: *)
+(*Explicit option*)
+
+
 Test[
 	2.
 	,
 	2
 	,
-	TestID -> "SameTest option"
+	TestID -> "SameTest: Explicit option: symbol"
 	,
 	SameTest -> Equal
 ]
-
-
-Test[
+TestMatch[
 	2.
 	,
 	2
 	,
-	TestID -> "EquivalenceFunction option"
+	TestID -> "SameTest: Explicit option: symbol arbitrary context"
 	,
-	EquivalenceFunction -> Equal
+	{`tmpContext`SameTest -> Equal}
+]
+TestStringMatch[
+	2.
+	,
+	2
+	,
+	TestID -> "SameTest: Explicit option: string"
+	,
+	{{"SameTest" -> Equal}, EquivalenceFunction -> SameQ}
+]
+
+
+(* ::Subsubsection:: *)
+(*SetOptions*)
+
+
+Internal`InheritedBlock[{TestFree},
+	SetOptions[TestFree, {EquivalenceFunction -> f, SameTest -> Equal}];
+	
+	TestFree[
+		2.
+		,
+		2
+		,
+		TestID -> "SameTest: SetOptions: symbol"
+	]
+]
+Internal`InheritedBlock[{TestStringFree},
+	SetOptions[TestStringFree, `tmpContext`SameTest -> Equal];
+	
+	TestStringFree[
+		2.
+		,
+		2
+		,
+		TestID -> "SameTest: SetOptions: symbol arbitrary context"
+	]
+]
+Internal`InheritedBlock[{Test},
+	SetOptions[Test, {"SameTest" -> Equal}];
+	
+	Test[
+		2.
+		,
+		2
+		,
+		TestID -> "SameTest: SetOptions: string"
+	]
+]
+
+
+(* ::Subsection:: *)
+(*EquivalenceFunction*)
+
+
+(* ::Subsubsection:: *)
+(*Explicit option*)
+
+
+TestMatch[
+	2.
+	,
+	2
+	,
+	TestID -> "EquivalenceFunction: Explicit option: symbol"
+	,
+	{{EquivalenceFunction -> Equal}}
+]
+TestStringMatch[
+	2.
+	,
+	2
+	,
+	TestID -> "EquivalenceFunction: Explicit option: symbol arbitrary context"
+	,
+	`tmpContext`EquivalenceFunction -> Equal
+]
+TestFree[
+	2.
+	,
+	2
+	,
+	TestID -> "EquivalenceFunction: Explicit option: string"
+	,
+	{"EquivalenceFunction" -> Equal, SameTest -> SameQ}
+]
+
+
+(* ::Subsubsection:: *)
+(*SetOptions*)
+
+
+Internal`InheritedBlock[{TestStringFree},
+	SetOptions[TestStringFree, EquivalenceFunction -> Equal];
+	
+	TestStringFree[
+		2.
+		,
+		2
+		,
+		TestID -> "EquivalenceFunction: SetOptions: symbol"
+	]
+]
+Internal`InheritedBlock[{Test},
+	SetOptions[Test, {`tmpContext`EquivalenceFunction -> Equal}];
+	
+	Test[
+		2.
+		,
+		2
+		,
+		TestID -> "EquivalenceFunction: SetOptions: symbol arbitrary context"
+	]
+]
+Internal`InheritedBlock[{TestMatch},
+	SetOptions[TestMatch, SameTest -> SameQ, "EquivalenceFunction" -> Equal];
+	
+	TestMatch[
+		2.
+		,
+		2
+		,
+		TestID -> "EquivalenceFunction: SetOptions: string"
+	]
 ]
 
 
@@ -64,8 +194,8 @@ Test[
 (*TearDown*)
 
 
-Unprotect["`*"]
-Quiet[Remove["`*"], {Remove::rmnsm}]
+Unprotect["`*", "`*`*"]
+Quiet[Remove["`*", "`*`*"], {Remove::rmnsm}]
 
 
 EndPackage[]
