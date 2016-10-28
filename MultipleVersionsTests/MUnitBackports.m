@@ -54,6 +54,37 @@ Unprotect["`*"]
 Begin["`Private`"]
 
 
+optNamePatt::usage =
+"\
+optNamePatt[\"name\"] \
+returns a pattern object matching given string \"name\" and symbol with such \
+name from any context."
+
+
+$defaultEquivalenceFunction::usage =
+"\
+$defaultEquivalenceFunction \
+is a function used as default value of EquivalenceFunction option of test \
+functions that have both EquivalenceFunction and SameTest options. \
+EquivalenceFunction options with literal $defaultEquivalenceFunction symbol \
+as value are never renamed to SameTest options."
+
+
+fixTestOpts::usage =
+"\
+fixTestOpts[optsList, wrongOptPatt, correctOpt] \
+returns a list of given options with options, which name matches \
+wrongOptPatt, renamed to correctOpt. Options with literal \
+$defaultEquivalenceFunction symbol as value are not renamed."
+
+
+fixTestOptsDownValue::usage =
+"\
+fixTestOptsDownValue[wrongOptPatt, correctOptName] \
+returns a down value for Test converting options matching wrongOptPatt to \
+options with correctOptName."
+
+
 optionsWithLoggers::usage =
 "\
 optionsWithLoggers[loggers, explicitOpts, defaultFromFunc, toFunc] \
@@ -391,63 +422,120 @@ If[MUnit`Information`$VersionNumber < 1.2,
 
 
 (* ::Subsection:: *)
+(*optNamePatt*)
+
+
+optNamePatt[name_String] := Alternatives[
+	name,
+	sym:Except[HoldPattern@Symbol[___], _Symbol] /;
+		SymbolName@Unevaluated@sym === name
+]
+
+
+(* ::Subsection:: *)
+(*$defaultEquivalenceFunction*)
+
+
+$defaultEquivalenceFunction = SameQ
+
+
+(* ::Subsection:: *)
+(*fixTestOpts*)
+
+
+fixTestOpts[optsList_List, wrongOptPatt_, correctOpt_Symbol] :=
+	Replace[optsList,
+		h_[wrongOptPatt, rhs:Except@HoldPattern@$defaultEquivalenceFunction] :>
+			h[correctOpt, rhs],
+		{1}
+	]
+
+
+(* ::Subsection:: *)
+(*fixTestOptsDownValue*)
+
+
+fixTestOptsDownValue[wrongOptPatt_, correctOpt_Symbol] =
+	HoldPattern@Test[
+		input_, expected_:True, Shortest[expectedMsgs_:{}],
+		opts:OptionsPattern[]
+	] :> With[{optsList = Flatten@{opts}},
+		With[{newOptsList = fixTestOpts[optsList, wrongOptPatt, correctOpt]},
+			Test[input, expected, expectedMsgs, newOptsList] /;
+				newOptsList =!= optsList
+		]
+	]
+
+
+(* ::Subsection:: *)
 (*Test options compatibility*)
 
 
-(*
-	MUnit v1.4 renamed EquivalenceFunction option to SameTest.
+(*	MUnit v1.4 renamed EquivalenceFunction option to SameTest.
 	
 	Add definition of Test function that changes option name to one compatible
 	with used version of MUnit (don't override option names symbols because it
 	will change their behavior also in places other than Test options which is
-	not desirable, especially for SameTest symbol).
-*)
+	not desirable, especially for SameTest symbol). *)
 With[
 	{
-		fixTestOptDownValue =
-			Function[
-				{incorrectOptName, correctOptName}
-				,
-				HoldPattern @ Test[
-					pre:Repeated[_, {2, Infinity}],
-					(rule:Rule|RuleDelayed)[incorrectOptName, sameTestValue_],
-					post___
-				] :>
-					Test[
-						pre,
-						rule[correctOptName, sameTestValue],
-						post
+		wrongOptPatt = optNamePatt@
+			If[Quiet[Options[Test, SameTest] === {}, Options::optnf],
+				"SameTest"
+			(* else *),
+				"EquivalenceFunction"
+			],
+		correctOpt =
+			If[Quiet[Options[Test, SameTest] === {}, Options::optnf],
+				MUnit`EquivalenceFunction
+			(* else *),
+				SameTest
+			],
+		setDefaultEquivalenceFunction =
+			If[Quiet[
+				Length@Options[Test, {SameTest, "EquivalenceFunction"}] === 2,
+				Options::optnf
+			]
+			(* then *),
+				(
+					Quiet[# /: SetOptions[#, opts:OptionsPattern[]] =.,
+						TagUnset::norep
+					];
+					SetOptions[#,
+						"EquivalenceFunction" :> $defaultEquivalenceFunction
 					]
+				)&
+			(* else *),
+				Identity
 			]
 	}
 	,
-	
-	(* Remove option fixing definitions if they exist. *)
-	Quiet[
-		Scan[
-			(Test[
-				pre:Repeated[_, {2, Infinity}],
-				(rule:Rule|RuleDelayed)[#, sameTestValue_],
-				post___
-			] =.)&
-			,
-			{SameTest, MUnit`EquivalenceFunction}
+	(*	Add proper option fixing definition as first down value. *)
+	DownValues[Test] = Prepend[
+		DeleteCases[DownValues[Test],
+			(* Remove option fixing definitions if they exist. *)
+			Verbatim@fixTestOptsDownValue[optNamePatt@SymbolName@#1, #2]& @@@
+				(# | Reverse@# &)@{SameTest, MUnit`EquivalenceFunction}
 		]
 		,
-		Unset::norep
+		fixTestOptsDownValue[wrongOptPatt, correctOpt]
 	];
 	
-	(* Add proper option fixing definition as first down value. *)
-	DownValues[Test] =
-		Prepend[
-			DownValues[Test]
-			,
-			If[MUnit`Information`$VersionNumber >= 1.4,
-				fixTestOptDownValue[MUnit`EquivalenceFunction, SameTest]
-			(* else *),
-				fixTestOptDownValue[SameTest, MUnit`EquivalenceFunction]
+	(
+		setDefaultEquivalenceFunction@#;
+		# /: SetOptions[#, opts:OptionsPattern[]] :=
+			With[{optsList = Flatten@{opts}},
+				With[{newOptsList = fixTestOpts[optsList, wrongOptPatt, correctOpt]},
+					SetOptions[#, newOptsList] /; newOptsList =!= optsList
+				]
 			]
-		]
+	)& /@ {
+		(* MUnit`Test` *)
+		Test, TestMatch, TestStringMatch, TestFree, TestStringFree,
+		(* MUnit`WRI` *)
+		ConditionalTest, ExactTest, ExactTestCaveat, NTest, NTestCaveat,
+		OrTest, TestCaveat
+	}
 ]
 
 
