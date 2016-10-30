@@ -148,9 +148,7 @@ End[]
 
 
 (* Protect all symbols in this context except variables. *)
-Protect @ Evaluate @ Names[
-	"`" ~~ Except["$"] ~~ Repeated[WordCharacter, {0, Infinity}]
-]
+Protect@Evaluate@Names[Context[] ~~ Except["$"] ~~ Except["`"]...]
 
 
 EndPackage[]
