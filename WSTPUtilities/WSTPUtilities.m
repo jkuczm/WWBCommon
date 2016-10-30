@@ -24,6 +24,10 @@
 BeginPackage["WSTPUtilities`"]
 
 
+Unprotect["`*"]
+ClearAll["`*"]
+
+
 (* ::Section:: *)
 (*Usage messages*)
 
@@ -63,18 +67,14 @@ by evaluation of definition expression. All messages and expressions printed \
 during evaluation are printed in evaluator calling this function."
 
 
-(*
-	Unprotect all symbols in this context
-	(all public symbols provided by this package)
-*)
-Unprotect["`*"]
-
-
 (* ::Subsection:: *)
 (*Private symbols usage*)
 	
 
 Begin["`Private`"]
+
+
+ClearAll["`*"]
 
 
 wstpUtilitiesThrowTag::usage =
@@ -348,10 +348,6 @@ End[]
 (*Public symbols protection*)
 
 
-(*
-	Protect all symbols in this context
-	(all public symbols provided by this package)
-*)
 Protect["`*"]
 
 

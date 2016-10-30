@@ -24,6 +24,10 @@
 BeginPackage["WorkbenchUtilities`"]
 
 
+Unprotect["`*"]
+ClearAll["`*"]
+
+
 (* ::Section:: *)
 (*Usage messages*)
 
@@ -55,11 +59,6 @@ given directory projectDir."
 (*Implementation*)
 
 
-(*	Unprotect all symbols in this context
-	(all public symbols provided by this package) *)
-Unprotect["`*"]
-
-
 (* ::Subsection:: *)
 (*MathematicaResources symbols*)
 
@@ -83,6 +82,9 @@ SetAttributes[Evaluate @ Symbol["`MathematicaResources`" <> #], HoldAll]& /@ {
 	
 
 Begin["`Private`"]
+
+
+ClearAll["`*"]
 
 
 AppendTo[$ContextPath, "WorkbenchUtilities`MathematicaResources`"]
@@ -388,8 +390,6 @@ End[]
 (*Public symbols protection*)
 
 
-(*	Protect all symbols in this context
-	(all public symbols provided by this package) *)
 Protect["`*"]
 
 

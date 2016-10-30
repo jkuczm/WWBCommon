@@ -25,8 +25,7 @@
 (*SetUp*)
 
 
-BeginPackage[
-	"TestEnvironment`MultipleVersionsTests`WSTPLinkLogger`",
+BeginPackage["TestEnvironment`MultipleVersionsTests`WSTPLinkLogger`",
 	{"MUnit`"}
 ]
 
@@ -34,15 +33,14 @@ BeginPackage[
 Needs["WSTPUtilities`"]
 
 
-Get["MultipleVersionsTests`MultipleVersionsTests`"]
+<<MultipleVersionsTests`MultipleVersionsTests`
 
 
-Get["MultipleVersionsTests`Tests`Utilities`"]
+<<MultipleVersionsTests`Tests`Utilities`
 
 
-command = First[$CommandLine] <> " -mathlink -noprompt"
-link = LinkLaunch[command]
-logger = WSTPLinkLogger[link]
+$link = LinkLaunch[First@$CommandLine <> " -mathlink -noprompt"]
+$logger = WSTPLinkLogger@$link
 
 
 (* ::Section:: *)
@@ -54,7 +52,7 @@ logger = WSTPLinkLogger[link]
 
 
 Test[
-	ToString[logger, OutputForm]
+	ToString[$logger, OutputForm]
 	,
 	"-WSTP Link Logger-"
 	,
@@ -67,9 +65,9 @@ Test[
 
 
 Test[
-	OptionValue[logger, LinkObject]
+	OptionValue[$logger, LinkObject]
 	,
-	link
+	$link
 	,
 	TestID -> "Attributes: LinkObject"
 ]
@@ -79,43 +77,38 @@ Test[
 (*LinkWrite calls*)
 
 
-Block[
-	{WSTPUtilities`LinkFullContextWrite = testLinkWrite}
-	,
+Block[{WSTPUtilities`LinkFullContextWrite = testLinkWrite},
 	Test[
-		LogMessage[logger, "Some message."]
+		LogMessage[$logger, "Some message."]
 		,
-		testLinkWrite[link, TestLoggerPacket[LogMessage, "Some message."]]
+		testLinkWrite[$link, TestLoggerPacket[LogMessage, "Some message."]]
 		,
 		TestID -> "Log function with 1 argument"
 	];
 	
 	Test[
-		LogEnd[logger, a, b, c, d, e, f, g]
+		LogEnd[$logger, a, b, c, d, e, f, g]
 		,
-		testLinkWrite[link, TestLoggerPacket[LogEnd, a, b, c, d, e, f, g]]
+		testLinkWrite[$link, TestLoggerPacket[LogEnd, a, b, c, d, e, f, g]]
 		,
 		TestID -> "Log function with 7 arguments"
 	];
 	
 	Test[
 		If[MUnit`Information`$VersionNumber >= 1.2,
-			LogFailure[logger, $FakeTestResult]
+			LogFailure[$logger, $FakeTestResult]
 		(* else *),
-			Block[
-				{MUnit`$CurrentFile = $FakeTestSource}
-				,
-				LogFailure[logger, $FakeTestResult]
+			Block[{MUnit`$CurrentFile = $FakeTestSource},
+				LogFailure[$logger, $FakeTestResult]
 			]
 		]
 		,
-		testLinkWrite[
-			link,
+		testLinkWrite[$link,
 			TestLoggerPacket[LogFailure, $FakeTestResultSerialized]
 		]
 		,
 		TestID -> "Log function with test result"
-	];
+	]
 ]
 
 
@@ -130,17 +123,17 @@ With[
 			MultipleVersionsTests`MUnitVersionedLoader`$WorkbenchMUnitPath
 	}
 	,
-	LinkDelegateEvaluation[link,
+	LinkDelegateEvaluation[$link,
 		$Path = Join[$Path, path] // DeleteDuplicates;
 		MultipleVersionsTests`MUnitVersionedLoader`$WorkbenchMUnitPath =
 			workbenchMUnitPath;
 		Needs["MultipleVersionsTests`"];
-	];
+	]
 ]
 
 TestMatch[
 	LinkDelegateEvaluation[
-		link
+		$link
 		,
 		remoteLogger = WSTPLinkLogger[$ParentLink];
 		{Context[Evaluate[remoteLogger]], SymbolName[remoteLogger]}
@@ -148,20 +141,17 @@ TestMatch[
 		"Head" -> HoldComplete
 	]
 	,
-	HoldPattern[HoldComplete][
+	HoldPattern[HoldComplete]@
 		{"MUnit`Loggers`Private`", _?(StringMatchQ[#, "logger*"]&)}
-	]
 	,
 	TestID -> "Remote evaluation: logger creation"
 ]
 
 
-Module[
-	{$PacketLog = {}}
-	,
+Module[{$PacketLog = {}},
 	Test[
 		LinkDelegateEvaluation[
-			link
+			$link
 			,
 			LogStart[remoteLogger, "test run title"]
 			,
@@ -172,7 +162,7 @@ Module[
 			)&)
 		]
 		,
-		HoldComplete[Null]
+		HoldComplete@Null
 		,
 		TestID -> "Remote evaluation: LogStart: returned value"
 	];
@@ -180,19 +170,17 @@ Module[
 	Test[
 		$PacketLog
 		,
-		{HoldComplete @ TestLoggerPacket[LogStart, "test run title"]}
+		{HoldComplete@TestLoggerPacket[LogStart, "test run title"]}
 		,
 		TestID -> "Remote evaluation: LogStart: $PacketLog"
-	];
+	]
 ]
 
 
-Module[
-	{$PacketLog = {}}
-	,
+Module[{$PacketLog = {}},
 	Test[
 		LinkDelegateEvaluation[
-			link
+			$link
 			,
 			LogBeginTestSource[remoteLogger, "test_file_name"]
 			,
@@ -203,7 +191,7 @@ Module[
 			)&)
 		]
 		,
-		HoldComplete[Null]
+		HoldComplete@Null
 		,
 		TestID -> "Remote evaluation: LogBeginTestSource: returned value"
 	];
@@ -212,27 +200,24 @@ Module[
 		$PacketLog
 		,
 		{
-			HoldComplete @ EvaluatePacket[
+			HoldComplete@EvaluatePacket[
 				If[MatchQ[MUnit`Package`testSourceStack, _List],
 					AppendTo[MUnit`Package`testSourceStack, "test_file_name"]
 				];
 			]
 			,
-			HoldComplete @
-				TestLoggerPacket[LogBeginTestSource, "test_file_name"]
+			HoldComplete@TestLoggerPacket[LogBeginTestSource, "test_file_name"]
 		}
 		,
 		TestID -> "Remote evaluation: LogBeginTestSource: $PacketLog"
-	];
+	]
 ]
 
 
-Module[
-	{$PacketLog = {}}
-	,
+Module[{$PacketLog = {}},
 	Test[
 		LinkDelegateEvaluation[
-			link
+			$link
 			,
 			LogEndTestSource[remoteLogger]
 			,
@@ -243,7 +228,7 @@ Module[
 			)&)
 		]
 		,
-		HoldComplete[Null]
+		HoldComplete@Null
 		,
 		TestID -> "Remote evaluation: LogEndTestSource: returned value"
 	];
@@ -252,15 +237,14 @@ Module[
 		$PacketLog
 		,
 		{
-			HoldComplete @ EvaluatePacket[
+			HoldComplete@EvaluatePacket[
 				If[MatchQ[MUnit`Package`testSourceStack, _List],
 					MUnit`Package`testSourceStack =
 						Most[MUnit`Package`testSourceStack]
 				];
 			]
 			,
-			HoldComplete @
-				TestLoggerPacket[LogEndTestSource]
+			HoldComplete@TestLoggerPacket[LogEndTestSource]
 		}
 		,
 		TestID -> "Remote evaluation: LogEndTestSource: $PacketLog"
@@ -272,7 +256,7 @@ Module[
 (*TearDown*)
 
 
-LinkClose[link]
+LinkClose@$link
 
 
 Unprotect["`*"]

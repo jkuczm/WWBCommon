@@ -24,6 +24,9 @@
 BeginPackage["MultipleVersionsTests`MUnitVersionedLoader`"]
 
 
+Unprotect["`*"]
+
+
 (* ::Section:: *)
 (*Usage messages*)
 
@@ -38,17 +41,12 @@ $WorkbenchMUnitPath \
 absolute path to Wolfram Workbench MUnit."
 
 
+ClearAll[NeedsVersionedMUnit]
+
 NeedsVersionedMUnit::usage =
 "\
 NeedsVersionedMUnit[] \
 loads proper MUnit package for used version of Mathematica."
-
-
-(*
-	Unprotect all symbols in this context
-	(all public symbols provided by this package)
-*)
-Unprotect["`*"]
 
 
 (* ::Subsection:: *)
@@ -56,6 +54,9 @@ Unprotect["`*"]
 	
 
 Begin["`Private`"]
+
+
+ClearAll["`*"]
 
 
 $minimalVersionNumber::usage =

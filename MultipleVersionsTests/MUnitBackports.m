@@ -24,6 +24,10 @@
 BeginPackage["MultipleVersionsTests`MUnitBackports`", {"MUnit`"}]
 
 
+Unprotect["`*"]
+ClearAll["`*"]
+
+
 (* ::Section:: *)
 (*Usage messages*)
 
@@ -40,18 +44,14 @@ Can accept path to test suite file even if used version of MUnit does not \
 support this feature."
 
 
-(*
-	Unprotect all symbols in this context
-	(all public symbols provided by this package)
-*)
-Unprotect["`*"]
-
-
 (* ::Subsection:: *)
 (*Private symbols usage*)
 	
 
 Begin["`Private`"]
+
+
+ClearAll["`*"]
 
 
 optNamePatt::usage =
@@ -588,7 +588,7 @@ optionsWithLoggers[
 	toFunc_Symbol
 ] :=
 	Replace[
-		DeleteDuplicates[
+		GatherBy[
 			FilterRules[
 				Flatten[{
 					Loggers -> loggers,
@@ -599,8 +599,8 @@ optionsWithLoggers[
 				Options[toFunc]
 			]
 			,
-			SameQ @@ First /@ {##}&
-		]
+			First
+		][[All, 1]]
 		,
 		(rule: Rule | RuleDelayed)[TestRunTitle, Automatic] :>
 			rule[TestRunTitle, None]
@@ -1064,10 +1064,6 @@ End[]
 (*Public symbols protection*)
 
 
-(*
-	Protect all symbols in this context
-	(all public symbols provided by this package)
-*)
 Protect["`*"]
 
 
