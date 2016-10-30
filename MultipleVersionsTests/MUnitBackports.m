@@ -422,6 +422,14 @@ If[MUnit`Information`$VersionNumber < 1.2,
 
 
 (* ::Subsection:: *)
+(*Use all option names recognized by OptionValue*)
+
+
+Composition[(#[name_, opts_, sym_] := OptionValue[sym, opts, name])&, Symbol] /@
+	Names["MUnit`*`compatOptionValue"]
+
+
+(* ::Subsection:: *)
 (*optNamePatt*)
 
 
