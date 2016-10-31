@@ -48,10 +48,7 @@ ToString["", InputForm, CharacterEncoding -> "ASCII"]
 (*Tests*)
 
 
-With[
-	{$listLogger = listLogger[]}
-	,
-	
+With[{$listLogger = listLogger[]},
 	Test[
 		testsOrSuiteRun["non_existent_file.mt", Loggers -> {$listLogger}]
 		,
@@ -71,13 +68,11 @@ With[
 		} // Flatten // DeleteCases[#, Null]&
 		,
 		TestID -> "non-existent file: log"
-	];
+	]
 ]
 
 
-With[
-	{$listLogger = listLogger[]}
-	,
+With[{$listLogger = listLogger[]},
 	Test[
 		testsOrSuiteRun[
 			FakeTestPath["test_success.mt"],
@@ -99,13 +94,11 @@ With[
 		} // Flatten // DeleteCases[#, Null]&
 		,
 		TestID -> "test file: 1 test success: log"
-	];
+	]
 ]
 
 
-With[
-	{$listLogger = listLogger[]}
-	,
+With[{$listLogger = listLogger[]},
 	Test[
 		testsOrSuiteRun[
 			FakeTestPath["test_failure.mt"],
@@ -127,13 +120,11 @@ With[
 		} // Flatten // DeleteCases[#, Null]&
 		,
 		TestID -> "test file: 1 test failure: log"
-	];
+	]
 ]
 
 
-With[
-	{$listLogger = listLogger[]}
-	,
+With[{$listLogger = listLogger[]},
 	Test[
 		testsOrSuiteRun[
 			FakeTestPath["test_message_failure.mt"],
@@ -155,13 +146,11 @@ With[
 		} // Flatten // DeleteCases[#, Null]&
 		,
 		TestID -> "test file: 1 test message failure: log"
-	];
+	]
 ]
 
 
-With[
-	{$listLogger = listLogger[]}
-	,
+With[{$listLogger = listLogger[]},
 	Test[
 		testsOrSuiteRun[FakeTestPath["tests.mt"], Loggers -> {$listLogger}]
 		,
@@ -180,7 +169,7 @@ With[
 		} // Flatten // DeleteCases[#, Null]&
 		,
 		TestID -> "test file: 3 tests: log"
-	];
+	]
 ]
 
 
@@ -195,7 +184,7 @@ With[
 		,
 		False
 		,
-		TestID -> "test suite file: returned value"
+		TestID -> "test suite file: valid TestSuite: returned value"
 	];
 
 	TestMatch[
@@ -212,15 +201,42 @@ With[
 			testRunEndLogs[10, False, 6, 2, 2, 2, 0, 0]
 		} // Flatten // DeleteCases[#, Null]&
 		,
-		TestID -> "test suite file: log"
-	];
+		TestID -> "test suite file: valid TestSuite: log"
+	]
 ]
 
 
-(*
-	TODO: Following tests fail in MUnit v1.0, but testsOrSuiteRun works in
-	v1.0, just not when run inside other TestRun.
-*)
+With[{$listLogger = listLogger[]},
+	Test[
+		testsOrSuiteRun[
+			FakeTestPath["suite_invalid.mt"],
+			Loggers -> {$listLogger}
+		]
+		,
+		False
+		,
+		TestID -> "test suite file: invalid TestSuite: returned value"
+	];
+
+	TestMatch[
+		OptionValue[$listLogger, "Log"]
+		,
+		{
+			testRunStartLogs["suite_invalid.mt"],
+			Hold[LogFatal,
+				"Invalid TestSuite expression: TestSuite[5, x, \"tests.mt\"]."
+			],
+			Hold[LogEnd, 0, 0, 0, 0, 0, 0, True],
+			Hold[LogEnd]
+		} // Flatten // DeleteCases[#, Null]&
+		,
+		TestID -> "test suite file: invalid TestSuite: log"
+	]
+]
+
+
+(*	TODO: Following tests fail in MUnit v1.0, but testsOrSuiteRun works in
+	v1.0, just not when run inside other TestRun. *)
 BeginTestSection["Syntax error", MUnit`Information`$VersionNumber =!= 1.0]
 With[
 	{
@@ -280,9 +296,9 @@ returned value"
 			]
 		} // Flatten // DeleteCases[#, Null]&
 		,
-		TestID ->
-			"don't run tests from other files when error encountered: log"
-	];
+		TestID -> "don't run tests from other files when error encountered: \
+log"
+	]
 ]
 EndTestSection[]
 

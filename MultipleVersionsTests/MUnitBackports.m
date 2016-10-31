@@ -109,12 +109,6 @@ returns an MUnit logger that aggregates results from \"test suite level\" log \
 functions in internal counters."
 
 
-testListRun::usage =
-"\
-testListRun[{tests1, tests2, ...}] \
-runs all testsi and returns True if all of them pass, and False otherwise."
-
-
 getTestSuite::usage =
 "\
 getTestSuite[testStream, allowedExpressionsPattern] \
@@ -123,10 +117,58 @@ If end of file or expression other than TestSuite and non matching \
 allowedExpressionsPattern is encountered $Failed is returned."
 
 
+handleTestSuite::usage =
+"\
+handleTestSuite[testSuite, fileName] \
+returns a pair: {isTestSuite, {testFilePath1, testFilePath2, ...}}. \
+If given testSuite is valid TestSuite expression, then isTestSuite is True \
+and testFilePathi are full paths to test files found in testSuite. \
+If given testSuite is $Failed, it means that test suite extraction from file \
+with given fileName failed, so it's assumed that it's a test file not a test \
+suite file, then isTestSuite is False and there's just one testFilePathi \
+which is fileName. \
+If testSuite is an invalid TestSuite expression, then appropriate error \
+message is thrown tagged with multipleVersionsTestsTag."
+
+
+processTestSuiteFile::usage =
+"\
+processTestSuiteFile[testFileName, allowedExpressionsPattern] \
+returns a pair: {isTestSuite, {testFilePath1, testFilePath2, ...}} \
+(see handleTestSuite). If file with given name can't be opened for reading \
+appropriate error message is thrown tagged with multipleVersionsTestsTag."
+
+
 logFatalEnd::usage =
 "\
-logFatalEnd[loggers, message] \
-logs fatal message and end messages on all given loggers."
+logFatalEnd[logger, message] \
+logs fatal message and end messages on given logger.\
+
+logFatalEnd[{logger1, logger2, ...}, message] \
+logs messages on all given loggers."
+
+
+logTestTitle::usage =
+"\
+logTestTitle[logger, title, testFileName] \
+logs start and begin messages with given title and testFileName on given \
+logger.\
+
+logTestTitle[{logger1, logger2, ...}, title, testFileName] \
+logs messages on all given loggers."
+
+
+logAggregates::usage =
+"\
+logAggregates[logger, aggregateLogger, usedLogFunctions] \
+logs \"test suite level\" messages, aggregated by given aggregateLogger, \
+using given list of log function, on given logger.\
+
+logAggregates[{logger1, logger2, ...}, aggregateLogger, usedLogFunctions] \
+logs messages on all given loggers.\
+
+logAggregates[loggers, aggregateLogger] \
+extracts used log functions from given aggregateLogger."
 
 
 testsOrSuiteRun::usage =
@@ -221,17 +263,13 @@ If[MUnit`Information`$VersionNumber == 1.0,
 				post
 			]
 	} /. {
-		(*
-			Subtract 1 from $TestIndex before logging test run end calculating
+		(*	Subtract 1 from $TestIndex before logging test run end calculating
 			whether test run was successful. If test index is 'n' then there
 			where 'n-1' tests. Without this change test run always reports
 			number of tests higher by 1 and since it's always higher than real
-			number of successful tests, test run always returns False.
-		*)
-		(*
-			Match whole CompoundExpression with LogTestRunProgres and LogEnd
-			expressions next to each other to prevent duplicate replacements.
-		*)
+			number of successful tests, test run always returns False. *)
+		(*	Match whole CompoundExpression with LogTestRunProgres and LogEnd
+			expressions next to each other to prevent duplicate replacements. *)
 		HoldPattern[CompoundExpression][
 			pre___
 			,
@@ -302,15 +340,13 @@ If[MatchQ[MUnit`Information`$VersionNumber, 1.3 | 1.4],
 		}
 		,
 		DownValues[testRunFunction] = DownValues[testRunFunction] /.
-			(*
-				Increment test index only once per TestID not once per TestID
+			(*	Increment test index only once per TestID not once per TestID
 				per logger. Wthout this replacement for n loggers each test
 				was logged with different test id in different logger. MUnit
 				v1.4 reported n * realTestCount is as test count and used this
 				value in calculations of whether test was successful. Since
 				n * realTestCount is always higher than number of successful
-				tests, TestRun always returned False.
-			*)
+				tests, TestRun always returned False. *)
 			HoldPattern[Outer][
 				HoldPattern[Function][
 					HoldPattern[LogTestInfo][
@@ -324,9 +360,7 @@ If[MatchQ[MUnit`Information`$VersionNumber, 1.3 | 1.4],
 				testidsVar_
 			] :>
 				Scan[
-					Function[
-						testid
-						,
+					Function[testid,
 						$testIndexVar++;
 						Scan[
 							LogTestInfo[
@@ -367,8 +401,7 @@ If[MUnit`Information`$VersionNumber < 1.3,
 			(* $Messages has been changed, most likely to $Messages or {} *)
 			(ListQ[$Messages] && MemberQ[$Messages, OutputStream["stdout", _]])
 			,
-			AppendTo[
-				MUnit`Test`Private`$MessageWithArgsList,
+			AppendTo[MUnit`Test`Private`$MessageWithArgsList,
 				HoldForm[Message[msg, args]]
 			];
 		]
@@ -376,8 +409,7 @@ If[MUnit`Information`$VersionNumber < 1.3,
 
 
 
-(*
-	MUnit version >= 1.2 accepts as expected messages and handles correctly:
+(*	MUnit version >= 1.2 accepts as expected messages and handles correctly:
 	* MessageName expressions,
 	* List of MessageName expressions,
 	* Message expressions with arguments not wrapped with HoldForm, all
@@ -391,8 +423,7 @@ If[MUnit`Information`$VersionNumber < 1.3,
 	list.
 	
 	In MUnit < 1.2 transform all valid forms of given messages to list of
-	message names.
-*)
+	message names. *)
 If[MUnit`Information`$VersionNumber < 1.2,
 	DownValues[Test] =
 		DeleteDuplicates @ Prepend[
@@ -413,10 +444,8 @@ If[MUnit`Information`$VersionNumber < 1.2,
 							Hold[messages],
 							Hold[msg_Message] :> Hold[{msg}]
 						];
-					(*
-						Replace Message expressions and Message expressions
-						wrapped in HoldForm with message names.
-					*)
+					(*	Replace Message expressions and Message expressions
+						wrapped in HoldForm with message names. *)
 					heldMessageNames =
 						Replace[
 							heldMessageNames
@@ -434,12 +463,10 @@ If[MUnit`Information`$VersionNumber < 1.2,
 							{2}
 						];
 					
-					(*
-						Pass list of message names without evaluating it. Test
+					(*	Pass list of message names without evaluating it. Test
 						has HoldAllComplete attribute and in MUnit < 1.2
 						accepts only messages argument matching certain pattern
-						so standard Unevaluated won't work.
-					*)
+						so standard Unevaluated won't work. *)
 					Function[
 						messageNames,
 						Test[input, expected, messageNames, opts],
@@ -614,16 +641,12 @@ optionsWithLoggers[
 
 
 muteLoggers[loggers_List] :=
-	With[
-		{originalUpValues = UpValues /@ loggers}
-		,
+	With[{originalUpValues = UpValues /@ loggers},
 		Scan[
 			(
 				UpValues[#] =
-					DeleteCases[
-						UpValues[#]
-						,
-						HoldPattern[HoldPattern][
+					DeleteCases[UpValues[#],
+						Verbatim[HoldPattern][
 							_LogStart | _LogBegin | _LogEnd |
 							_LogBeginTestSource | _LogEndTestSource |
 							_LogExpressionCount | _LogCPUTimeUsed |
@@ -649,9 +672,7 @@ muteLoggers[loggers_List] :=
 
 
 aggregateLogger[] :=
-	With[
-		{logger = Unique["MUnit`Loggers`Private`logger"]}
-		,
+	With[{logger = Unique["MUnit`Loggers`Private`logger"]},
 		Options[logger] = {
 			"UsedLogFunctions" -> {}
 			,
@@ -736,10 +757,8 @@ aggregateLogger[] :=
 						OptionValue[logger, "AbortOrFatal"] || abortOrFatal
 				];
 				
-				(*
-					Recalculate "was successful" here since MUnit <1.3 don't
-					use LogWasSuccessful.
-				*)
+				(*	Recalculate "was successful" here since MUnit <1.3 don't
+					use LogWasSuccessful. *)
 				SetOptions[logger,
 					LogWasSuccessful ->
 						OptionValue[logger, LogWasSuccessful] &&
@@ -778,17 +797,17 @@ aggregateLogger[] :=
 getTestSuite[testStream_InputStream, allowedPatt_] :=
 	Module[{expr},
 		While[True,
-			expr = Read[testStream, HoldComplete[Expression]];
+			expr = Read[testStream, HoldComplete@Expression];
 
 			Switch[expr,
 				HoldComplete[_TestSuite],
-					Return[First[expr]]
+					Return[First@expr, Module]
 				,
 				allowedPatt,
 					Continue[]
 				,
 				_,
-					Return[$Failed]
+					Return[$Failed, Module]
 			];
 		];
 
@@ -797,244 +816,223 @@ getTestSuite[testStream_InputStream, allowedPatt_] :=
 
 
 (* ::Subsection:: *)
+(*handleTestSuite*)
+
+
+(* suiteFile is not valid test suite file, so assume it's a test file. *)
+handleTestSuite[$Failed, suiteFile_String] := {False, {suiteFile}}
+
+(*	Valid TestSuite found in given file. Return test files from test suite. *)
+handleTestSuite[HoldPattern@TestSuite[files:{___String}], suiteFile_String] :=
+	With[{dir = DirectoryName@suiteFile},
+		{True, FileNameJoin@{dir, #}& /@ files}
+	]
+
+(* TestSuite found in given file, but it's invalid. *)
+handleTestSuite[testSuite_, _String] :=
+	Throw[
+		"Invalid TestSuite expression: " <> ToString[testSuite, InputForm] <> ".",
+		multipleVersionsTestsTag
+	]
+
+
+(* ::Subsection:: *)
+(*processTestSuiteFile*)
+
+
+processTestSuiteFile[testFileName_String, allowedPatt_] :=
+	With[{testStream = Quiet@OpenRead@testFileName},
+		If[testStream === $Failed,
+			Throw["Could not open test file\n" <> testFileName <> ".",
+				multipleVersionsTestsTag
+			]
+		];
+		CheckAll[
+			Block[{TestSuite},
+				handleTestSuite[
+					getTestSuite[testStream, allowedPatt],
+					testFileName
+				]
+			],
+			(Close[testStream]; ReleaseHold[#2]; #1)&
+		]
+	]
+
+
+(* ::Subsection:: *)
 (*logFatalEnd*)
 
 
-logFatalEnd[loggers_List, message_] :=
-	Scan[
-		(
-			LogFatal[#, ToString[message]];
-			LogEnd[#, 0, 0, 0, 0, 0, 0, True];
-			LogEnd[#];
-		)&
-		,
-		loggers
+logFatalEnd[logger_Symbol, message_] := (
+	LogFatal[logger, ToString[message]];
+	LogEnd[logger, 0, 0, 0, 0, 0, 0, True];
+	LogEnd[logger];
+)
+
+logFatalEnd[loggers_List, message_] := Scan[logFatalEnd[#, message]&, loggers]
+
+
+(* ::Subsection:: *)
+(*logTestTitle*)
+
+
+(*	FileNameTake was introduced in v7, handle also earlier versions.*)
+If[$VersionNumber >= 7,
+	logTestTitle[loggers: _Symbol | _List, Automatic, testFileName_String] :=
+		logTestTitle[loggers,
+			"Test Report: " <> Symbol["System`FileNameTake"][testFileName],
+			testFileName
+		]
+(* else *),
+	logTestTitle[loggers: _Symbol | _List, Automatic, testFileName_String] :=
+		logTestTitle[loggers, None, testFileName]
+]
+
+logTestTitle[logger_Symbol, title_, testFileName_String] := (
+	LogStart[logger, title];
+	LogBegin[logger, title];
+	LogStart[logger, title, testFileName];
+	LogBegin[logger, title, testFileName];
+)
+
+logTestTitle[loggers_List, title_, testFileName_String] :=
+	Scan[logTestTitle[#, title, testFileName]&, loggers]
+
+
+(* ::Subsection:: *)
+(*logAggregates*)
+
+
+logAggregates[loggers: _Symbol | _List, $aggregateLogger_] :=
+	logAggregates[loggers, $aggregateLogger,
+		OptionValue[$aggregateLogger, "UsedLogFunctions"]
 	]
+
+logAggregates[logger_Symbol, $aggregateLogger_, usedLogFunctions_] := (
+	If[MemberQ[usedLogFunctions, LogExpressionCount],
+		LogExpressionCount[logger,
+			OptionValue[$aggregateLogger, LogExpressionCount]
+		]
+	];
+	
+	Scan[#[logger, OptionValue[$aggregateLogger, #]]&,
+		{
+			LogCPUTimeUsed, LogAbsoluteTimeUsed, LogMemoryUsed, LogTestCount,
+			LogSuccessCount, LogFailureCount, LogMessagesFailureCount,
+			LogSkippedTestCount, LogErrorCount
+		}
+	];
+	
+	Scan[
+		If[MemberQ[usedLogFunctions, #],
+			#[logger, OptionValue[$aggregateLogger, #]]
+		]&
+		,
+		{LogWasAborted, LogWasFatal, LogWasSyntax}
+	];
+	
+	LogWasSuccessful[logger, OptionValue[$aggregateLogger, LogWasSuccessful]];
+	
+	LogEnd[logger,
+		Sequence @@ OptionValue[$aggregateLogger, {
+			LogTestCount, LogSuccessCount, LogFailureCount,
+			LogMessagesFailureCount, LogSkippedTestCount, LogErrorCount,
+			"AbortOrFatal"
+		}]
+	];
+	LogEnd[logger];
+)
+
+logAggregates[loggers_List, $aggregateLogger_, usedLogFunctions_] :=
+	Scan[logAggregates[#, $aggregateLogger, usedLogFunctions]&, loggers]
 
 
 (* ::Subsection:: *)
 (*testsOrSuiteRun*)
 
 
-Options[testsOrSuiteRun] = Options[TestRun];
-AppendTo[
-	Options[testsOrSuiteRun],
-	"AllowedExpressionsPattern" -> HoldComplete[Null]
-];
+Options[testsOrSuiteRun] =
+	Append[
+		Options[TestRun],
+		"AllowedExpressionsPattern" -> HoldComplete[Null]
+	]
 SetOptions[testsOrSuiteRun, TestRunTitle -> Automatic]
 
 SetAttributes[testsOrSuiteRun, HoldFirst]
 
 
 testsOrSuiteRun[testFileName_String, opts:OptionsPattern[]] :=
-	Module[
-		{
-			title = OptionValue[TestRunTitle],
-			loggers = OptionValue[Loggers],
-			testStream = Quiet[OpenRead[testFileName]],
-			$aggregateLogger = aggregateLogger[],
-			testSuite,
-			validTestSuite = False,
-			testsList,
-			testRunOptions,
-			originalUpValues,
-			usedLogFunctions,
-			$results = {False}
-		}
-		,
-		
-		If[title === Automatic,
-			(*
-				FileNameTake was introduced in v7, handle also earlier
-				versions.
-			*)
-			If[ValueQ[System`FileNameTake[testFileName]],
-				title = "Test Report: " <> System`FileNameTake[testFileName]
-			(* else *),
-				title = None
-			]
-		];
-		
-		Scan[
-			(
-				LogStart[#, title];
-				LogBegin[#, title];
-				LogStart[#, title, testFileName];
-				LogBegin[#, title, testFileName];
-			)&
-			,
-			loggers
-		];
-		If[testStream === $Failed,
-			logFatalEnd[
-				loggers,
-				"Could not open test file\n" <> testFileName <> "."
-			];
-			Return[False]
-		];
-		
-		Block[
-			{TestSuite}
-			,
-			testSuite =
-				getTestSuite[
-					testStream,
-					OptionValue["AllowedExpressionsPattern"]
+	With[{loggers = OptionValue@Loggers, $aggregateLogger = aggregateLogger[]},
+		logTestTitle[loggers, OptionValue@TestRunTitle, testFileName];
+	With[{
+		processedTestSuite = Catch[
+			processTestSuiteFile[testFileName,
+				OptionValue@"AllowedExpressionsPattern"
+			],
+			multipleVersionsTestsTag,
+			(logFatalEnd[loggers, #1]; Return[False, With])&
+		]
+	},
+	With[{isTestSuite = First@processedTestSuite},
+		If[isTestSuite, Scan[LogBeginTestSource[#, testFileName]&, loggers]];
+	With[{
+		testRunOptions = optionsWithLoggers[
+			Append[loggers, $aggregateLogger],
+			opts,
+			testsOrSuiteRun,
+			TestRun
+		],
+		originalUpValues = muteLoggers[loggers]
+	},
+	With[{
+		result = Catch[
+			And @@ Function[tests,
+				MapThread[
+					(LogBeginTestSource[#1, tests] /. #2)&,
+					{loggers, originalUpValues}
 				];
-			
-			Close[testStream];
-			
-			Switch[testSuite,
-				$Failed,
-					(*
-						This is not a valid test suite file so assume it's a
-						test file.
-					*)
-					testsList = {testFileName}
-				,
-				HoldPattern[TestSuite][{___String}],
-					(*
-						Valid TestSuite found in given file.
-						Run tests on all files in test suite.
-					*)
-					validTestSuite = True;
-					testsList =
-						FileNameJoin[{DirectoryName[testFileName], #}]& /@
-			 				First[testSuite]
-				,
-				_,
-					(* TestSuite found in given file, but it's invalid. *)
-					logFatalEnd[
-						loggers,
-						StringForm["Invalid TestSuite expression: `1`.", testSuite]
+				With[{testRunResult = TestRun[tests, testRunOptions]},
+					MapThread[
+						(LogEndTestSource[#1] /. #2)&,
+						{loggers, originalUpValues}
 					];
-					Return[False]
+					
+					testRunResult
 				]
-		];
-		
-		If[validTestSuite,
-			Scan[LogBeginTestSource[#, testFileName]&, loggers]
-		];
-		
-		testRunOptions =
-			optionsWithLoggers[
-				Append[loggers, $aggregateLogger],
-				opts,
-				testsOrSuiteRun,
-				TestRun
-			];
-		originalUpValues = muteLoggers[loggers];
-		
-		Catch[
-			$results =
-				Function[
-					tests
-					,
-					Module[
-						{testRunResult}
-						,
-						MapThread[
-							(LogBeginTestSource[#1, tests] /. #2)&,
-							{loggers, originalUpValues}
-						];
-						
-						testRunResult = TestRun[tests, testRunOptions];
-						
-						MapThread[
-							(LogEndTestSource[#1] /. #2)&,
-							{loggers, originalUpValues}
-						];
-						
-						testRunResult
-					]
-				] /@
-					testsList
+			] /@
+				Last@processedTestSuite
 			,
-			multipleVersionsTestsTag
-		];
-		
-		(* Restore original logerrs up values. *)
+			multipleVersionsTestsTag,
+			False&
+		]
+	},
+		(* Unmute logerrs. *)
 		MapThread[(UpValues[#1] = #2)&, {loggers, originalUpValues}];
 		
-		If[validTestSuite,
-			Scan[LogEndTestSource, loggers]
-		];
+		If[isTestSuite, Scan[LogEndTestSource, loggers]];
 		
-		usedLogFunctions = OptionValue[$aggregateLogger, "UsedLogFunctions"];
+		logAggregates[loggers, $aggregateLogger];
 		
-		Scan[
-			Function[
-				logger
-				,
-				If[MemberQ[usedLogFunctions, LogExpressionCount],
-					LogExpressionCount[
-						logger,
-						OptionValue[$aggregateLogger, LogExpressionCount]
-					]
-				];
-				
-				Scan[
-					#[logger, OptionValue[$aggregateLogger, #]]&
-					,
-					{
-						LogCPUTimeUsed, LogAbsoluteTimeUsed, LogMemoryUsed,
-						LogTestCount, LogSuccessCount, LogFailureCount,
-						LogMessagesFailureCount, LogSkippedTestCount,
-						LogErrorCount
-					}
-				];
-				
-				Scan[
-					If[MemberQ[usedLogFunctions, #],
-						#[logger, OptionValue[$aggregateLogger, #]]
-					]&
-					,
-					{LogWasAborted, LogWasFatal, LogWasSyntax}
-				];
-				
-				LogWasSuccessful[
-					logger,
-					OptionValue[$aggregateLogger, LogWasSuccessful]
-				];
-				
-				LogEnd[logger,
-					Sequence @@ OptionValue[$aggregateLogger, {
-						LogTestCount, LogSuccessCount, LogFailureCount,
-						LogMessagesFailureCount, LogSkippedTestCount,
-						LogErrorCount, "AbortOrFatal"
-					}]
-				];
-				LogEnd[logger];
-			]
-			,
-			loggers
-		];
-		
-		And @@ $results
-	]
+		result
+	]]]]]
 
-(*
-	testsOrSuiteRun has attribute HoldFirst since it can accept list of tests
+(*	testsOrSuiteRun has attribute HoldFirst since it can accept list of tests
 	and we want to evaluate them inside testsOrSuiteRun. But if first argument
 	is not an explicit list assume it can be evaluated. If it evaluates to any
-	form accepted by TestRun proceed with ordinary testsOrSuiteRun.
-*)
+	form accepted by TestRun proceed with ordinary testsOrSuiteRun. *)
 testsOrSuiteRun[
 	tests:Except[_String | _List | _NotebookObject | _InputStream],
 	opts:OptionsPattern[]
 ] :=
-	With[
-		{testsEvaluated = tests}
-		,
-		testsOrSuiteRun[testsEvaluated, opts]
-			/; MatchQ[testsEvaluated,
+	With[{testsEvaluated = tests},
+		testsOrSuiteRun[testsEvaluated, opts] /;
+			MatchQ[testsEvaluated,
 				_String | _List | _NotebookObject | _InputStream
 			]
 	]
 
 testsOrSuiteRun[tests_, opts:OptionsPattern[]] :=
-	TestRun[
-		tests,
+	TestRun[tests,
 		optionsWithLoggers[
 			OptionValue[Loggers],
 			opts,
