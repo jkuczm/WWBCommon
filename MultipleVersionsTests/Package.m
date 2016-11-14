@@ -32,6 +32,13 @@ BeginPackage["MultipleVersionsTests`Package`"]
 (*Public symbols usage*)
 
 
+$mUnitRevisionNumber::usage =
+"\
+$mUnitRevisionNumber \
+is a real number which gives the MUnit package revision, if used MUnit \
+version provides such information, otherwise is None."
+
+
 $logFunctions::usage =
 "\
 $logFunctions \
@@ -56,6 +63,21 @@ Unprotect["`*"]
 	
 
 Begin["`Private`"]
+
+
+(* ::Subsection:: *)
+(*$MUnitRevisionNumber*)
+
+
+$mUnitRevisionNumber =
+	If[MUnit`Information`$VersionNumber < 1.4,
+		First@StringCases[Symbol@"MUnit`Information`$MUnitRevision",
+			"$Revision: " ~~ x : NumberString ~~ " $" :> ToExpression@x,
+			1
+		]
+	(* else *),
+		None
+	]
 
 
 (* ::Subsection:: *)

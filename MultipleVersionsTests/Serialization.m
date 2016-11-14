@@ -34,7 +34,7 @@ BeginPackage["MultipleVersionsTests`Serialization`", {"MUnit`"}]
 
 TestResultSerialized::usage =
 "\
-TestResultSerialized[\"selsctor1\" -> val1, \"selector2\" -> val2, ...] \
+TestResultSerialized[\"selector1\" -> val1, \"selector2\" -> val2, ...] \
 represents serialized version of test result. It's stateless, independent of \
 MUnit version and can be sent through WSTP link."
 
@@ -53,10 +53,8 @@ returns, proper for used version of MUnit, test result object with data taken \
 from given serialized test result trSerialized."
 
 
-(*
-	Unprotect all symbols in this context
-	(all public symbols provided by this package)
-*)
+(*	Unprotect all symbols in this context
+	(all public symbols provided by this package) *)
 Unprotect["`*"]
 
 
@@ -65,13 +63,6 @@ Unprotect["`*"]
 	
 
 Begin["`Private`"]
-
-
-optionNameReplacementRules::usage =
-"\
-optionNameReplacementRules[{old1 -> new1, old2 -> new2, ...}] \
-returns rules that can be used to replace old option names with new names in \
-oprion rules list."
 
 
 $testResultOptNames::usage =
@@ -93,25 +84,17 @@ $testResultSelectors \
 is a list of test result selectors from currently used versions of MUnit."
 
 
-$testResultOptSerialization::usage =
+serializeSelecorName::usage =
 "\
-$testResultOptSerialization \
-is a list of transformation rules unifying test result option names from \
-different versions of MUnit."
+serializeSelecorName[\"selector\"] \
+returns name of given selector in form unified for all versions of MUnit."
 
 
-$testResultOptDeserialization::usage =
+deserializeSelecorName::usage =
 "\
-$testResultOptDeserialization \
-is a list of transformation rules translating option names from serialized \
-test result to option names of test result from used version of MUnit."
-
-
-extractTest::usage =
-"\
-extractTest[tr] \
-returns test expression extracted from given test result object tr if used \
-version of MUnit supports this feature, otherwise returns None."
+deserializeSelecorName[\"selector\"] \
+returns selector name, apropriate for used version of MUnit, corresponding to \
+given serialized selector name."
 
 
 (* ::Section:: *)
@@ -122,15 +105,7 @@ version of MUnit supports this feature, otherwise returns None."
 (*Imports*)
 
 
-Get["MultipleVersionsTests`Package`"]
-
-
-(* ::Subsection:: *)
-(*optionNameReplacementRules*)
-
-
-optionNameReplacementRules =
-	Function[(rule_[#1, value_] :> rule[#2, value])& @@@ Flatten[{##}]]
+<<MultipleVersionsTests`Package`
 
 
 (* ::Subsection:: *)
@@ -138,10 +113,8 @@ optionNameReplacementRules =
 
 
 $testResultNonOptSelectors = {
-	(*
-		Make sure all non-option selectors are in MUnit` context,
-		even if they are not defined in used version of MUnit.
-	*)
+	(*	Make sure all non-option selectors are in MUnit` context,
+		even if they are not defined in used version of MUnit. *)
 	MUnit`Test,
 	MUnit`FailureMode,
 	MUnit`TestInput,
@@ -157,22 +130,19 @@ $testResultNonOptSelectors = {
 (*$testResultOptNames*)
 
 
-$testResultOptNames =
-	First /@ Which[
-		(*
-			Use Symbol["..."] to avoid declaring symbols in this context,
-			when they are not declared in used version of MUnit.
-		*)
-		MUnit`Information`$VersionNumber >= 1.4,
-			Options[Symbol["TestResult"]],
-		MUnit`Information`$VersionNumber >= 1.2,
-			Options[Symbol["TestResultObject"]],
-		True,
-			Append[
-				Options[Symbol["TestResultObject"]],
-				Symbol["TestTags"] -> {}
-			]
+(*	Use Symbol@"..." to avoid declaring symbols in this context, when they are
+	not declared in used version of MUnit.*)
+$testResultOptNames = Options[
+	Symbol@If[MUnit`Information`$VersionNumber >= 1.4,
+		"TestResult"
+	(* else *),
+		"TestResultObject"
 	]
+][[All, 1]]
+
+If[MUnit`Information`$VersionNumber < 1.2,
+	AppendTo[$testResultOptNames, Symbol@"TestTags"]
+]
 
 
 (* ::Subsection:: *)
@@ -180,101 +150,83 @@ $testResultOptNames =
 
 
 $testResultSelectors =
-	Join[Rest[$testResultNonOptSelectors], $testResultOptNames]
+	Join[Rest@$testResultNonOptSelectors, $testResultOptNames]
 
 
 (* ::Subsection:: *)
-(*$testResultOptSerialization*)
+(*serializeSelecorName*)
 
 
-$testResultOptSerialization =
-	optionNameReplacementRules[
-		"EquivalenceFunction" -> "SameTest",
-		"TestTimeUsed" -> "TestCPUTimeUsed",
-		"TestFileChild" -> "TestSource"
-	]
+serializeSelecorName@"EquivalenceFunction" = "SameTest"
+
+serializeSelecorName@"TestInputSetFunction" = "ActualOutputSetFunction"
+
+serializeSelecorName@"TestTimeUsed" = "TestCPUTimeUsed"
+
+serializeSelecorName@"TestFileChild" = "TestSource"
+
+serializeSelecorName@name_String := name
 
 
 (* ::Subsection:: *)
-(*$testResultOptDeserialization*)
+(*deserializeSelecorName*)
 
 
-$testResultOptDeserialization =
+If[MUnit`Information`$VersionNumber < 1.4,
+	deserializeSelecorName@"SameTest" = "EquivalenceFunction";
+	deserializeSelecorName@"TestCPUTimeUsed" = "TestTimeUsed";
+	
 	Which[
-		MUnit`Information`$VersionNumber >= 1.4,
-			{}
+		MUnit`Information`$VersionNumber == 1.3 &&
+				TrueQ[$mUnitRevisionNumber < 1.7],
+			deserializeSelecorName@"ActualOutputSetFunction" =
+				"TestInputSetFunction"
 		,
-		MUnit`Information`$VersionNumber >= 1.3,
-			optionNameReplacementRules[
-				"SameTest" -> "EquivalenceFunction",
-				"TestCPUTimeUsed" -> "TestTimeUsed"
-			]
-		,
-		MUnit`Information`$VersionNumber >= 1.2,
-			optionNameReplacementRules[
-				"SameTest" -> "EquivalenceFunction",
-				"TestCPUTimeUsed" -> "TestTimeUsed",
-				"TestSource" -> "TestFileChild"
-			]
-		,
-		True,
-			optionNameReplacementRules[
-				"SameTest" -> "EquivalenceFunction",
-				"TestCPUTimeUsed" -> "TestTimeUsed"
-			]
+		MUnit`Information`$VersionNumber == 1.2,
+			deserializeSelecorName@"TestSource" = "TestFileChild"
 	]
-
-
-(* ::Subsection:: *)
-(*extractTest*)
-
-
-If[MUnit`Information`$VersionNumber >= 1.3,
-	extractTest = None&
-(* else *),
-	extractTest = First
 ]
+
+deserializeSelecorName@name_String := name
 
 
 (* ::Subsection:: *)
 (*SerializeTestResult*)
 
 
-SerializeTestResult[tr_?TestResultQ] :=
-	(*
-		Use Sort @ DeleteDuplicates instead of Union since we want to keep
-		first (before sorting) occurence of each option.
-	*)
-	TestResultSerialized @@ Sort @ DeleteDuplicates[
-		Flatten[{
-			Replace[
-				Reap[
-					Scan[
-						If[ValueQ[#[tr]],
-							Sow[
-								SymbolName[#] -> #[tr],
-								multipleVersionsTestsTag
-							]
-						]&
-						,
-						$testResultSelectors
-					]
-					,
-					multipleVersionsTestsTag
-				][[2, 1]]
-				,
-				$testResultOptSerialization
-				,
-				{1}
+With[
+	{
+		extractTest =
+			If[MUnit`Information`$VersionNumber <= 1.3 &&
+					TrueQ[$mUnitRevisionNumber <= 1.6]
+			(* then *),
+				First
+			(* else *),
+				None&
 			]
-			,
-			"Test" -> extractTest[tr],
-			"ErrorMessage" -> "",
-			"TestSource" -> $CurrentFile
-		}]
-		,
-		SameQ @@ First /@ {##}&
-	]
+	}
+	,
+	SerializeTestResult@tr_?TestResultQ :=
+		With[
+			{
+				rules = Cases[$testResultSelectors,
+					sel_ /; ValueQ@sel@tr :>
+						serializeSelecorName@SymbolName@sel -> sel@tr
+				]
+			},
+			TestResultSerialized @@ Sort@Join[
+				rules,
+				FilterRules[
+					{
+						"Test" -> extractTest[tr],
+						"ErrorMessage" -> "",
+						"TestSource" -> $CurrentFile
+					},
+					Except@rules
+				]
+			]
+		]
+]
 
 
 (* ::Subsection:: *)
@@ -284,14 +236,13 @@ SerializeTestResult[tr_?TestResultQ] :=
 With[
 	{
 		trHead =
-			(*
-				Use Symbol["..."] to avoid declaring symbols, when they are not
-				declared in used version of MUnit.
-			*)
-			Symbol @ Which[
+			(*	Use Symbol["..."] to avoid declaring symbols, when they are not
+				declared in used version of MUnit. *)
+			Symbol@Which[
 				MUnit`Information`$VersionNumber >= 1.4,
 					"MUnit`Test`Private`newTestResult",
-				MUnit`Information`$VersionNumber >= 1.3,
+				MUnit`Information`$VersionNumber >= 1.3 &&
+						TrueQ[$mUnitRevisionNumber >= 1.7],
 					"MUnit`Test`Private`newTestResultObject",
 				True,
 					"TestResultObject"
@@ -301,22 +252,18 @@ With[
 			If[MUnit`Information`$VersionNumber >= 1.2,
 				$testResultNonOptSelectors
 			(* else *),
-				Most[$testResultNonOptSelectors]
+				Most@$testResultNonOptSelectors
 			]
 	}
 	,
-	DeserializeTestResult[trSerialized_TestResultSerialized] :=
-		With[
-			{opts = List @@ trSerialized}
-			,
-			trHead[
-				Sequence @@ (OptionValue[opts, #]& /@ nonOptSelectors)
-				,
-				Sequence @@ (#[[0]][Symbol[#[[1]]], #[[2]]]&) /@
-					FilterRules[
-						Replace[opts, $testResultOptDeserialization, {1}],
-						$testResultOptNames
-					]
+	DeserializeTestResult@trSerialized_TestResultSerialized :=
+		With[{opts = List @@ trSerialized},
+			trHead @@ Join[
+				OptionValue[opts, nonOptSelectors],
+				FilterRules[
+					Symbol@deserializeSelecorName@#1 -> #2& @@@ opts,
+					$testResultOptNames
+				]
 			]
 		]
 ]
@@ -329,10 +276,8 @@ End[]
 (*Public symbols protection*)
 
 
-(*
-	Protect all symbols in this context
-	(all public symbols provided by this package)
-*)
+(*	Protect all symbols in this context
+	(all public symbols provided by this package) *)
 Protect["`*"]
 
 

@@ -34,11 +34,16 @@ BeginPackage[
 Get["MultipleVersionsTests`Serialization`"]
 
 
+Get["MultipleVersionsTests`Package`"]
 Get["MultipleVersionsTests`Tests`Utilities`"]
 
 
-If[MUnit`Information`$VersionNumber >= 1.3,
-	prepareTr = Context[Evaluate[#]]&
+If[
+	MUnit`Information`$VersionNumber >= 1.4 ||
+	MUnit`Information`$VersionNumber == 1.3 &&
+		TrueQ[$mUnitRevisionNumber >= 1.7]
+(* then *),
+	prepareTr = Context@#&
 (* else *),
 	prepareTr = Sort
 ]

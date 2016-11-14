@@ -28,11 +28,12 @@
 BeginPackage["TestEnvironment`MUnitBackports`testsOrSuiteRun`", {"MUnit`"}]
 
 
-Get["MultipleVersionsTests`MUnitBackports`"]
+<<MultipleVersionsTests`MUnitBackports`
 PrependTo[$ContextPath, "MultipleVersionsTests`MUnitBackports`Private`"]
 
 
-Get["MultipleVersionsTests`Tests`Utilities`"]
+<<MultipleVersionsTests`Package`
+<<MultipleVersionsTests`Tests`Utilities`
 
 
 (*
@@ -232,7 +233,11 @@ With[
 		,
 		False
 		,
-		If[MatchQ[MUnit`Information`$VersionNumber, 1.0 | 1.3],
+		If[
+			MUnit`Information`$VersionNumber == 1.0 ||
+			MUnit`Information`$VersionNumber == 1.3 &&
+				TrueQ[$mUnitRevisionNumber >= 1.7]
+		(* then *),
 			{Read::readt}
 		(* else *),
 			{}

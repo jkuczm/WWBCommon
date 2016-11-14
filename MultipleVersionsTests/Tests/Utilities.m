@@ -563,7 +563,9 @@ Module[
 					"OrNTestFailureMessages" -> orntestFailureMessages
 				];
 		,
-		MUnit`Information`$VersionNumber >= 1.3,
+		MUnit`Information`$VersionNumber >= 1.3 &&
+			TrueQ[$mUnitRevisionNumber >= 1.7]
+		,
 			$FakeTestResult =
 				MUnit`Test`Private`newTestResultObject[
 					test,
@@ -606,6 +608,63 @@ Module[
 					"TestIndex" -> testIndex,
 					"AllTestIndex" -> allTestIndex,
 					"TestID" -> testID,
+					"ExpectedOutputSetFunction" -> expectedOutputSetFunction,
+					"SameTest" -> sameTest,
+					"MessagesEquivalenceFunction" -> msgsEquivFunc,
+					"ExpectedMessagesWrapper" -> expectedMsgsWrapper,
+					"TestFailureMessage" -> testFailureMessage,
+					"TestFailureAction" -> testFailureAction,
+					"TestErrorAction" -> testErrorAction,
+					"TestCPUTimeUsed" -> cpuTimeUsed,
+					"TestMemoryUsed" -> memoryUsed,
+					"TestTags" -> testTags,
+					"TestSource" -> testSource
+				];
+		,
+		MUnit`Information`$VersionNumber >= 1.3,
+			$FakeTestResult =
+				Symbol["TestResultObject"][
+					test,
+					failureMode,
+					HoldForm[input],
+					HoldForm[expectedOutput],
+					HoldForm[actualOutput],
+					expectedMsgsWrapper[expectedMsgs],
+					actualMsgs,
+					errorMsg
+					,
+					TestIndex -> testIndex,
+					AllTestIndex -> allTestIndex,
+					TestID -> testID,
+					TestInputSetFunction -> actualOutputSetFunction,
+					ExpectedOutputSetFunction -> expectedOutputSetFunction,
+					EquivalenceFunction -> sameTest,
+					MessagesEquivalenceFunction -> msgsEquivFunc,
+					ExpectedMessagesWrapper -> expectedMsgsWrapper,
+					TestFailureMessage -> testFailureMessage,
+					TestFailureAction -> testFailureAction,
+					TestErrorAction -> testErrorAction,
+					TestTimeUsed -> cpuTimeUsed,
+					TestMemoryUsed -> memoryUsed,
+					TestTags -> testTags,
+					TestSource -> testSource
+				];
+			
+			$FakeTestResultSerialized =
+				Sort @ TestResultSerialized[
+					"Test" -> test,
+					"FailureMode" -> failureMode,
+					"TestInput" -> HoldForm[input],
+					"ExpectedOutput" -> HoldForm[expectedOutput],
+					"ActualOutput" -> HoldForm[actualOutput],
+					"ExpectedMessages" -> expectedMsgsWrapper[expectedMsgs],
+					"ActualMessages" -> actualMsgs,
+					"ErrorMessage" -> errorMsg
+					,
+					"TestIndex" -> testIndex,
+					"AllTestIndex" -> allTestIndex,
+					"TestID" -> testID,
+					"ActualOutputSetFunction" -> actualOutputSetFunction,
 					"ExpectedOutputSetFunction" -> expectedOutputSetFunction,
 					"SameTest" -> sameTest,
 					"MessagesEquivalenceFunction" -> msgsEquivFunc,

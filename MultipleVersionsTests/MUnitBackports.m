@@ -257,6 +257,36 @@ If[MUnit`Information`$VersionNumber == 1.0,
 
 
 (* ::Subsection:: *)
+(*Fix MUnit v1.3 revision 1.6 test section handling*)
+
+
+(*	In this specific revision there's a bug that causes reporting of invalid
+	section primitive when BeginTestSection with two arguments, or any
+	EndTestSection, is encountered. *)
+If[MUnit`Information`$VersionNumber == 1.3 && TrueQ[$mUnitRevisionNumber == 1.6],
+	DownValues[MUnit`TestRun`Private`testRun] =
+		DownValues[MUnit`TestRun`Private`testRun] /. {
+			RuleDelayed[
+				HoldComplete@BeginTestSection[patt_],
+				HoldComplete@BeginTestSection[var_, True]
+			] :>
+				RuleDelayed[
+					HoldComplete@BeginTestSection[patt, require_:True],
+					HoldComplete@BeginTestSection[var, require]
+				],
+			RuleDelayed[
+				HoldComplete@Verbatim[Alternatives][EndRequirement, EndIgnore][],
+				HoldComplete@EndTestSection[]
+			] :>
+				RuleDelayed[
+					HoldComplete@(EndTestSection|EndRequirement|EndIgnore)[],
+					HoldComplete@EndTestSection[]
+				]
+		}
+]
+
+
+(* ::Subsection:: *)
 (*Fix test index counting with multiple loggers*)
 
 
