@@ -24,6 +24,10 @@
 BeginPackage["NotebookUtilities`"]
 
 
+Unprotect["`*"]
+ClearAll["`*"]
+
+
 (* ::Section:: *)
 (*Usage messages*)
 
@@ -56,14 +60,10 @@ saves changes, and returns List of saved file names."
 (*Implementation*)
 
 
-(*
-	Unprotect all symbols in this context
-	(all public symbols provided by this package)
-*)
-Unprotect["`*"]
-
-
 Begin["`Private`"]
+
+
+ClearAll["`*"]
 
 
 (* ::Subsection:: *)
@@ -235,10 +235,6 @@ End[]
 (*Public symbols protection*)
 
 
-(*
-	Protect all symbols in this context
-	(all public symbols provided by this package)
-*)
 Protect["`*"]
 
 

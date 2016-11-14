@@ -24,6 +24,10 @@
 BeginPackage["MultipleVersionsTests`Serialization`", {"MUnit`"}]
 
 
+Unprotect["`*"]
+ClearAll["`*"]
+
+
 (* ::Section:: *)
 (*Usage messages*)
 
@@ -53,16 +57,14 @@ returns, proper for used version of MUnit, test result object with data taken \
 from given serialized test result trSerialized."
 
 
-(*	Unprotect all symbols in this context
-	(all public symbols provided by this package) *)
-Unprotect["`*"]
-
-
 (* ::Subsection:: *)
 (*Private symbols usage*)
 	
 
 Begin["`Private`"]
+
+
+ClearAll["`*"]
 
 
 $testResultOptNames::usage =
@@ -276,8 +278,6 @@ End[]
 (*Public symbols protection*)
 
 
-(*	Protect all symbols in this context
-	(all public symbols provided by this package) *)
 Protect["`*"]
 
 

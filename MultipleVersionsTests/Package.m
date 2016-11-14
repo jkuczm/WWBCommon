@@ -24,6 +24,10 @@
 BeginPackage["MultipleVersionsTests`Package`"]
 
 
+Unprotect["`*"]
+ClearAll["`*"]
+
+
 (* ::Section:: *)
 (*Usage messages*)
 
@@ -53,16 +57,12 @@ tag used internally by MultipleVersionsTests package."
 
 (* ::Section:: *)
 (*Implementation*)
-
-
-(*
-	Unprotect all symbols in this context
-	(all public symbols provided by this package)
-*)
-Unprotect["`*"]
 	
 
 Begin["`Private`"]
+
+
+ClearAll["`*"]
 
 
 (* ::Subsection:: *)
@@ -130,10 +130,6 @@ End[]
 (*Public symbols protection*)
 
 
-(*
-	Protect all symbols in this context
-	(all public symbols provided by this package)
-*)
 Protect["`*"]
 
 

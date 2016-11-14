@@ -24,6 +24,10 @@
 BeginPackage["MultipleVersionsTests`", {"MUnit`"}]
 
 
+Unprotect["`*"]
+ClearAll["`*"]
+
+
 (* ::Section:: *)
 (*Usage messages*)
 
@@ -54,18 +58,14 @@ wstpLoggerInstance when logFunction[wstpLoggerInstance, arg1, arg2, ...] is \
 evaluated. logFunction can be any of MUnit`Log... functions."
 
 
-(*
-	Unprotect all symbols in this context
-	(all public symbols provided by this package)
-*)
-Unprotect["`*"]
-
-
 (* ::Subsection:: *)
 (*Private symbols usage*)
 	
 
 Begin["`Private`"]
+
+
+ClearAll["`*"]
 
 
 logVersionRunTests::usage =
@@ -379,10 +379,6 @@ End[]
 (*Public symbols protection*)
 
 
-(*
-	Protect all symbols in this context
-	(all public symbols provided by this package)
-*)
 Protect["`*"]
 
 

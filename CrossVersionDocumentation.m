@@ -39,6 +39,10 @@
 BeginPackage["CrossVersionDocumentation`"]
 
 
+Unprotect["`*"]
+ClearAll["`*"]
+
+
 (* ::Section:: *)
 (*Usage messages*)
 
@@ -60,18 +64,14 @@ NotebookCrossVersionFix[nb] \
 with nb being Notebook expression, returns nb with cross version fixes."
 
 
-(*
-	Unprotect all symbols in this context
-	(all public symbols provided by this package)
-*)
-Unprotect["`*"]
-
-
 (* ::Subsection:: *)
 (*Private symbols usage*)
 
 
 Begin["`Private`"]
+
+
+ClearAll["`*"]
 
 
 ToTitleCase::usage =
@@ -458,9 +458,7 @@ End[]
 
 
 (* Protect all symbols in this context except variables. *)
-Protect @ Evaluate @ Names[
-	"`"~~ Except["$"] ~~ Repeated[WordCharacter, {0, Infinity}]
-]
+Protect@Evaluate@Names[Context[] ~~ Except["$"] ~~ Except["`"]...]
 
 
 EndPackage[]
